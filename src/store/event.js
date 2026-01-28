@@ -1,13 +1,8 @@
-import Vue from 'vue'
-
-export default {
-  mutations: {
-    addEvent({ curComponent }, { event, param }) {
-      curComponent.events[event] = param
-    },
-
-    removeEvent({ curComponent }, event) {
-      Vue.delete(curComponent.events, event)
-    },
+export const eventActions = {
+  addEvent({ event, param }) {
+    this.curComponent.events[event] = param
+  },
+  removeEvent(event) {
+    delete this.curComponent.events[event]
   },
 }

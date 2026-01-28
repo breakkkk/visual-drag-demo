@@ -49,71 +49,58 @@
   </el-collapse-item>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import { styleMap, optionMap, selectKey } from '@/utils/attr'
 
-export default {
-  data() {
-    return {
-      optionMap,
-      selectKey,
-      styleMap,
-      eventOptions: [
-        { label: '点击', value: 'v-click' },
-        { label: '悬浮', value: 'v-hover' },
-      ],
-      oldOpacity: '',
-      oldBackgroundColor: '',
-    }
-  },
-  computed: {
-    linkage() {
-      return this.$store.state.curComponent.linkage
-    },
-    componentData() {
-      return this.$store.state.componentData
-    },
-    curComponent() {
-      return this.$store.state.curComponent
-    },
-  },
-  methods: {
-    onEnter(index) {
-      this.oldOpacity = this.componentData[index].style.opacity
-      this.oldBackgroundColor = this.componentData[index].style.backgroundColor
-      this.componentData[index].style.opacity = '.3'
-      this.componentData[index].style.backgroundColor = '#409EFF'
-    },
+const store = useStore()
+const { curComponent, componentData } = storeToRefs(store)
 
-    onOut(index) {
-      this.componentData[index].style.opacity = this.oldOpacity
-      this.componentData[index].style.backgroundColor = this.oldBackgroundColor
-    },
+const eventOptions = [
+  { label: '点击', value: 'v-click' },
+  { label: '悬浮', value: 'v-hover' },
+]
+const oldOpacity = ref('')
+const oldBackgroundColor = ref('')
 
-    isIncludesColor(str) {
-      return str.toLowerCase().includes('color')
-    },
+const linkage = computed(() => curComponent.value.linkage)
 
-    addAttr(style) {
-      style.push({ key: '', value: '' })
-    },
+function onEnter(index) {
+  oldOpacity.value = componentData.value[index].style.opacity
+  oldBackgroundColor.value = componentData.value[index].style.backgroundColor
+  componentData.value[index].style.opacity = '.3'
+  componentData.value[index].style.backgroundColor = '#409EFF'
+}
 
-    addComponent() {
-      this.linkage.data.push({
-        id: '',
-        event: '',
-        style: [{ key: '', value: '' }],
-      })
-    },
+function onOut(index) {
+  componentData.value[index].style.opacity = oldOpacity.value
+  componentData.value[index].style.backgroundColor = oldBackgroundColor.value
+}
 
-    deleteData(style, index) {
-      style.splice(index, 1)
-    },
+function isIncludesColor(str) {
+  return str.toLowerCase().includes('color')
+}
 
-    deleteLinkageData(index) {
-      this.linkage.data.splice(index, 1)
-    },
-  },
+function addAttr(style) {
+  style.push({ key: '', value: '' })
+}
+
+function addComponent() {
+  linkage.value.data.push({
+    id: '',
+    event: '',
+    style: [{ key: '', value: '' }],
+  })
+}
+
+function deleteData(style, index) {
+  style.splice(index, 1)
+}
+
+function deleteLinkageData(index) {
+  linkage.value.data.splice(index, 1)
 }
 </script>
 

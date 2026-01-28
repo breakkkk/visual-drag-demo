@@ -1,11 +1,8 @@
-export default {
-  mutations: {
-    lock({ curComponent }) {
-      curComponent.isLock = true
-    },
-
-    unlock({ curComponent }) {
-      curComponent.isLock = false
-    },
+export const lockActions = {
+  lock() {
+    this.curComponent.isLock = true
+  },
+  unlock() {
+    this.curComponent.isLock = false
   },
 }

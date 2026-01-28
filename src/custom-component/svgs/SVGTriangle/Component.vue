@@ -1,8 +1,7 @@
 <template>
-  <div class="svg-triangle-container">
+  <div ref="triangleRef" class="svg-triangle-container">
     <svg version="1.1" baseProfile="full" xmlns="http://www.w3.org/2000/svg">
       <polygon
-        ref="triangle"
         :points="points"
         :stroke="element.style.borderColor"
         :fill="element.style.backgroundColor"
@@ -13,56 +12,52 @@
   </div>
 </template>
 
-<script>
-import OnEvent from '../../common/OnEvent'
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { useOnEvent } from '../../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: String,
-      required: true,
-      default: '',
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: String,
+    required: true,
+    default: '',
   },
-  data() {
-    return {
-      points: '',
-    }
+  element: {
+    type: Object,
+    default: () => {},
   },
-  watch: {
-    'element.style.width': function () {
-      this.draw()
-    },
-    'element.style.height': function () {
-      this.draw()
-    },
+  linkage: {
+    type: Object,
+    default: () => {},
   },
-  mounted() {
-    this.draw()
-  },
-  methods: {
-    draw() {
-      const { width, height } = this.element.style
-      this.drawTriangle(width, height)
-    },
+})
 
-    drawTriangle(width, height) {
-      // 五角星十个坐标点的比例集合
-      const points = [
-        [0.5, 0.05],
-        [1, 0.95],
-        [0, 0.95],
-      ]
+const triangleRef = ref(null)
+const points = ref('')
 
-      const coordinatePoints = points.map((point) => `${width * point[0]} ${height * point[1]}`)
-      this.points = coordinatePoints.toString()
-    },
-  },
+useOnEvent(props, triangleRef)
+
+onMounted(() => {
+  draw()
+})
+
+watch(() => props.element.style.width, draw)
+watch(() => props.element.style.height, draw)
+
+function draw() {
+  const { width, height } = props.element.style
+  drawTriangle(width, height)
+}
+
+function drawTriangle(width, height) {
+  const p = [
+    [0.5, 0.05],
+    [1, 0.95],
+    [0, 0.95],
+  ]
+
+  const coordinatePoints = p.map((point) => `${width * point[0]} ${height * point[1]}`)
+  points.value = coordinatePoints.toString()
 }
 </script>
 

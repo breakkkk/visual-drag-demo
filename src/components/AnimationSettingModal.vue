@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :title="`${config.label} 动画配置`"
-    :visible="centerDialogVisible"
+    v-model="centerDialogVisible"
     width="30%"
     center
     @close="handleCloseModal"
@@ -19,63 +19,65 @@
       是否循环：<el-switch v-model="config.isLoop" active-text="是" inactive-text="否" :disabled="isDisabled">
       </el-switch>
     </div>
-    <span slot="footer" class="dialog-footer">
-      <el-button @click="handleCloseModal">取 消</el-button>
-      <el-button type="primary" @click="handleSaveSetting">确 定</el-button>
-    </span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="handleCloseModal">取 消</el-button>
+        <el-button type="primary" @click="handleSaveSetting">确 定</el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 
-<script>
-import { mapState } from 'vuex'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import eventBus from '@/utils/eventBus'
 
-export default {
-  name: 'AnimationSettingModal',
-  props: {
-    curIndex: {
-      type: Number,
-      default: 0,
-    },
+const props = defineProps({
+  curIndex: {
+    type: Number,
+    default: 0,
   },
-  data() {
-    return {
-      centerDialogVisible: true,
-      config: {},
-    }
-  },
-  computed: {
-    ...mapState(['curComponent']),
-    isDisabled() {
-      return this.curComponent.animations.length > 1
-    },
-  },
-  created() {
-    const { label, animationTime, isLoop = false, value } = this.curComponent.animations[this.curIndex] || {}
-    this.config = {
-      animationTime,
-      label,
+})
+
+const emit = defineEmits(['close'])
+
+const store = useStore()
+const { curComponent } = storeToRefs(store)
+
+const centerDialogVisible = ref(true)
+const config = ref({})
+
+const isDisabled = computed(() => {
+  return curComponent.value.animations.length > 1
+})
+
+onMounted(() => {
+  const { label, animationTime, isLoop = false, value } = curComponent.value.animations[props.curIndex] || {}
+  config.value = {
+    animationTime,
+    label,
+    isLoop,
+    value,
+  }
+})
+
+function handleCloseModal() {
+  emit('close')
+}
+
+function handleSaveSetting() {
+  const { isLoop } = config.value
+  store.alterAnimation({
+    index: props.curIndex,
+    data: {
+      animationTime: config.value.animationTime,
       isLoop,
-      value,
-    }
-  },
-  methods: {
-    handleCloseModal() {
-      this.$emit('close')
     },
-    handleSaveSetting() {
-      const { isLoop } = this.config
-      this.$store.commit('alterAnimation', {
-        index: this.curIndex,
-        data: {
-          animationTime: this.config.animationTime,
-          isLoop,
-        },
-      })
-      eventBus.$emit('stopAnimation')
-      this.handleCloseModal()
-    },
-  },
+  })
+  eventBus.emit('stopAnimation')
+  handleCloseModal()
 }
 </script>
 

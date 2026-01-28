@@ -1,18 +1,16 @@
-export default {
-  state: {
-    menuTop: 0, // 右击菜单数据
-    menuLeft: 0,
-    menuShow: false,
-  },
-  mutations: {
-    showContextMenu(state, { top, left }) {
-      state.menuShow = true
-      state.menuTop = top
-      state.menuLeft = left
-    },
+export const contextmenuState = {
+  menuTop: 0,
+  menuLeft: 0,
+  menuShow: false,
+}
 
-    hideContextMenu(state) {
-      state.menuShow = false
-    },
+export const contextmenuActions = {
+  showContextMenu({ top, left }) {
+    this.menuShow = true
+    this.menuTop = top
+    this.menuLeft = left
+  },
+  hideContextMenu() {
+    this.menuShow = false
   },
 }

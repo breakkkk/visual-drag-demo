@@ -1,84 +1,6 @@
-import store from './index'
+import { deepCopy } from '@/utils/utils'
 import toast from '@/utils/toast'
 import generateID from '@/utils/generateID'
-import { deepCopy } from '@/utils/utils'
-
-export default {
-  state: {
-    copyData: null, // 复制粘贴剪切
-    isCut: false,
-  },
-  mutations: {
-    copy(state) {
-      if (!state.curComponent) {
-        toast('请选择组件')
-        return
-      }
-
-      // 如果有剪切的数据，需要先还原
-      restorePreCutData(state)
-      copyData(state)
-
-      state.isCut = false
-    },
-
-    paste(state, isMouse) {
-      if (!state.copyData) {
-        toast('请选择组件')
-        return
-      }
-
-      const data = state.copyData.data
-
-      if (isMouse) {
-        data.style.top = state.menuTop
-        data.style.left = state.menuLeft
-      } else {
-        data.style.top += 10
-        data.style.left += 10
-      }
-
-      store.commit('addComponent', { component: deepCopyHelper(data) })
-      if (state.isCut) {
-        state.copyData = null
-      }
-    },
-
-    cut(state) {
-      if (!state.curComponent) {
-        toast('请选择组件')
-        return
-      }
-
-      // 如果重复剪切，需要恢复上一次剪切的数据
-      restorePreCutData(state)
-      copyData(state)
-
-      store.commit('deleteComponent')
-      state.isCut = true
-    },
-  },
-}
-
-// 恢复上一次剪切的数据
-function restorePreCutData(state) {
-  if (state.isCut && state.copyData) {
-    const data = deepCopy(state.copyData.data)
-    const index = state.copyData.index
-    store.commit('addComponent', { component: data, index })
-    if (state.curComponentIndex >= index) {
-      // 如果当前组件索引大于等于插入索引，需要加一，因为当前组件往后移了一位
-      state.curComponentIndex++
-    }
-  }
-}
-
-function copyData(state) {
-  state.copyData = {
-    data: deepCopy(state.curComponent),
-    index: state.curComponentIndex,
-  }
-}
 
 function deepCopyHelper(data) {
   const result = deepCopy(data)
@@ -88,6 +10,66 @@ function deepCopyHelper(data) {
       result.propValue[i] = deepCopyHelper(component)
     })
   }
-
   return result
+}
+
+export const copyState = {
+  copyData: null,
+  isCut: false,
+}
+
+export const copyActions = {
+  copy() {
+    if (!this.curComponent) {
+      toast('请选择组件')
+      return
+    }
+    this.restorePreCutData()
+    this.copyDataAction()
+    this.isCut = false
+  },
+  paste(isMouse) {
+    if (!this.copyData) {
+      toast('请选择组件')
+      return
+    }
+    const data = this.copyData.data
+    if (isMouse) {
+      data.style.top = this.menuTop
+      data.style.left = this.menuLeft
+    } else {
+      data.style.top += 10
+      data.style.left += 10
+    }
+    this.addComponent({ component: deepCopyHelper(data) })
+    if (this.isCut) {
+      this.copyData = null
+    }
+  },
+  cut() {
+    if (!this.curComponent) {
+      toast('请选择组件')
+      return
+    }
+    this.restorePreCutData()
+    this.copyDataAction()
+    this.deleteComponent()
+    this.isCut = true
+  },
+  restorePreCutData() {
+    if (this.isCut && this.copyData) {
+      const data = deepCopy(this.copyData.data)
+      const index = this.copyData.index
+      this.addComponent({ component: data, index })
+      if (this.curComponentIndex >= index) {
+        this.curComponentIndex++
+      }
+    }
+  },
+  copyDataAction() {
+    this.copyData = {
+      data: deepCopy(this.curComponent),
+      index: this.curComponentIndex,
+    }
+  },
 }

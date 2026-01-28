@@ -1,4 +1,4 @@
-import store from '@/store'
+import { useStore } from '@/store'
 import eventBus from '@/utils/eventBus'
 
 const ctrlKey = 17,
@@ -52,15 +52,16 @@ let isCtrlOrCommandDown = false
 // 全局监听按键操作并执行相应命令
 export function listenGlobalKeyDown() {
   window.onkeydown = (e) => {
-    if (!store.state.isInEdiotr) return
+    const store = useStore()
+    if (!store.isInEdiotr) return
 
-    const { curComponent } = store.state
+    const { curComponent } = store
     const { keyCode } = e
     if (keyCode === ctrlKey || keyCode === commandKey) {
       isCtrlOrCommandDown = true
     } else if (keyCode == deleteKey && curComponent) {
-      store.commit('deleteComponent')
-      store.commit('recordSnapshot')
+      store.deleteComponent()
+      store.recordSnapshot()
     } else if (isCtrlOrCommandDown) {
       if (unlockMap[keyCode] && (!curComponent || !curComponent.isLock)) {
         e.preventDefault()
@@ -79,69 +80,80 @@ export function listenGlobalKeyDown() {
   }
 
   window.onmousedown = () => {
-    store.commit('setInEditorStatus', false)
+    const store = useStore()
+    store.setInEditorStatus(false)
   }
 }
 
 function copy() {
-  store.commit('copy')
+  const store = useStore()
+  store.copy()
 }
 
 function paste() {
-  store.commit('paste')
-  store.commit('recordSnapshot')
+  const store = useStore()
+  store.paste()
+  store.recordSnapshot()
 }
 
 function cut() {
-  store.commit('cut')
+  const store = useStore()
+  store.cut()
 }
 
 function redo() {
-  store.commit('redo')
+  const store = useStore()
+  store.redo()
 }
 
 function undo() {
-  store.commit('undo')
+  const store = useStore()
+  store.undo()
 }
 
 function compose() {
-  if (store.state.areaData.components.length) {
-    store.commit('compose')
-    store.commit('recordSnapshot')
+  const store = useStore()
+  if (store.areaData.components.length) {
+    store.compose()
+    store.recordSnapshot()
   }
 }
 
 function decompose() {
-  const curComponent = store.state.curComponent
+  const store = useStore()
+  const curComponent = store.curComponent
   if (curComponent && !curComponent.isLock && curComponent.component == 'Group') {
-    store.commit('decompose')
-    store.commit('recordSnapshot')
+    store.decompose()
+    store.recordSnapshot()
   }
 }
 
 function save() {
-  eventBus.$emit('save')
+  eventBus.emit('save')
 }
 
 function preview() {
-  eventBus.$emit('preview')
+  eventBus.emit('preview')
 }
 
 function deleteComponent() {
-  if (store.state.curComponent) {
-    store.commit('deleteComponent')
-    store.commit('recordSnapshot')
+  const store = useStore()
+  if (store.curComponent) {
+    store.deleteComponent()
+    store.recordSnapshot()
   }
 }
 
 function clearCanvas() {
-  eventBus.$emit('clearCanvas')
+  eventBus.emit('clearCanvas')
 }
 
 function lock() {
-  store.commit('lock')
+  const store = useStore()
+  store.lock()
 }
 
 function unlock() {
-  store.commit('unlock')
+  const store = useStore()
+  store.unlock()
 }

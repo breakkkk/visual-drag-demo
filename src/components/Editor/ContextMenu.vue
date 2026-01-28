@@ -20,68 +20,61 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
+<script setup>
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 
-export default {
-  data() {
-    return {
-      copyData: null,
-    }
-  },
-  computed: mapState(['menuTop', 'menuLeft', 'menuShow', 'curComponent']),
-  methods: {
-    lock() {
-      this.$store.commit('lock')
-    },
+const store = useStore()
+const { menuTop, menuLeft, menuShow, curComponent } = storeToRefs(store)
 
-    unlock() {
-      this.$store.commit('unlock')
-    },
+function lock() {
+  store.lock()
+}
 
-    // 点击菜单时不取消当前组件的选中状态
-    handleMouseUp() {
-      this.$store.commit('setClickComponentStatus', true)
-    },
+function unlock() {
+  store.unlock()
+}
 
-    cut() {
-      this.$store.commit('cut')
-    },
+function handleMouseUp() {
+  store.setClickComponentStatus(true)
+}
 
-    copy() {
-      this.$store.commit('copy')
-    },
+function cut() {
+  store.cut()
+}
 
-    paste() {
-      this.$store.commit('paste', true)
-      this.$store.commit('recordSnapshot')
-    },
+function copy() {
+  store.copy()
+}
 
-    deleteComponent() {
-      this.$store.commit('deleteComponent')
-      this.$store.commit('recordSnapshot')
-    },
+function paste() {
+  store.paste(true)
+  store.recordSnapshot()
+}
 
-    upComponent() {
-      this.$store.commit('upComponent')
-      this.$store.commit('recordSnapshot')
-    },
+function deleteComponent() {
+  store.deleteComponent()
+  store.recordSnapshot()
+}
 
-    downComponent() {
-      this.$store.commit('downComponent')
-      this.$store.commit('recordSnapshot')
-    },
+function upComponent() {
+  store.upComponent()
+  store.recordSnapshot()
+}
 
-    topComponent() {
-      this.$store.commit('topComponent')
-      this.$store.commit('recordSnapshot')
-    },
+function downComponent() {
+  store.downComponent()
+  store.recordSnapshot()
+}
 
-    bottomComponent() {
-      this.$store.commit('bottomComponent')
-      this.$store.commit('recordSnapshot')
-    },
-  },
+function topComponent() {
+  store.topComponent()
+  store.recordSnapshot()
+}
+
+function bottomComponent() {
+  store.bottomComponent()
+  store.recordSnapshot()
 }
 </script>
 

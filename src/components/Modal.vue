@@ -1,32 +1,29 @@
 <template>
-  <div v-if="show" class="modal-bg" @click="hide">
-    <div class="fadeInLeft animated modal" @click="stopPropagation">
-      <slot></slot>
+  <teleport to="body">
+    <div v-if="modelValue" class="modal-bg" @click="hide">
+      <div class="fadeInLeft animated modal" @click="stopPropagation">
+        <slot></slot>
+      </div>
     </div>
-  </div>
+  </teleport>
 </template>
 
-<script>
-export default {
-  model: {
-    prop: 'show',
-    event: 'change',
+<script setup>
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false,
   },
-  props: {
-    show: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  methods: {
-    hide() {
-      this.$emit('change')
-    },
+})
 
-    stopPropagation(e) {
-      e.stopPropagation()
-    },
-  },
+const emit = defineEmits(['update:modelValue'])
+
+function hide() {
+  emit('update:modelValue', false)
+}
+
+function stopPropagation(e) {
+  e.stopPropagation()
 }
 </script>
 

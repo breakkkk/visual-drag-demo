@@ -37,14 +37,14 @@
         <input v-model="scale" @input="handleScaleChange" />
         %
       </div>
-      <el-switch
+      <!-- <el-switch
         v-model="switchValue"
         class="dark-mode-switch"
-        active-icon-class="el-icon-sunny"
-        inactive-icon-class="el-icon-moon"
+        :active-icon="Sunny"
+        :inactive-icon="Moon"
         active-color="#000"
         @change="handleToggleDarkMode"
-      ></el-switch>
+      ></el-switch> -->
       <el-dropdown
         v-if="showComponentAlign"
         :hide-on-click="false"
@@ -54,18 +54,20 @@
       >
         <el-button type="primary">
           对齐方式
-          <i class="el-icon-arrow-down el-icon--right"></i>
+          <el-icon class="el-icon--right"><ArrowDown /></el-icon>
         </el-button>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item
-            v-for="item in alignList"
-            :key="item.value"
-            :command="item.value"
-            :disabled="item.isDisabled ? areaData.components.length < 3 : false"
-          >
-            {{ item.label }}
-          </el-dropdown-item>
-        </el-dropdown-menu>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item
+              v-for="item in alignList"
+              :key="item.value"
+              :command="item.value"
+              :disabled="item.isDisabled ? areaData.components.length < 3 : false"
+            >
+              {{ item.label }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
       </el-dropdown>
     </div>
 
@@ -75,338 +77,289 @@
 
     <el-dialog
       :title="isExport ? '导出数据' : '导入数据'"
-      :visible.sync="isShowDialog"
+      v-model="isShowDialog"
       :close-on-press-escape="false"
       :close-on-click-modal="false"
-      width="600"
+      width="600px"
     >
       <el-input v-model="jsonData" type="textarea" :rows="20" placeholder="请输入 JSON 数据"></el-input>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="isShowDialog = false">取 消</el-button>
-        <el-upload
-          v-show="!isExport"
-          action="/"
-          :before-upload="beforeUpload"
-          :show-file-list="false"
-          accept="application/json"
-        >
-          <el-button type="primary">选择 JSON 文件</el-button>
-        </el-upload>
-        <el-button type="primary" @click="processJSON">确 定</el-button>
-      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="isShowDialog = false">取 消</el-button>
+          <el-upload
+            v-show="!isExport"
+            action="/"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            accept="application/json"
+          >
+            <el-button type="primary">选择 JSON 文件</el-button>
+          </el-upload>
+          <el-button type="primary" @click="processJSON">确 定</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import generateID from '@/utils/generateID'
 import toast from '@/utils/toast'
-import { mapState } from 'vuex'
-import Preview from '@/components/Editor/Preview'
+import Preview from '@/components/Editor/Preview.vue'
 import AceEditor from '@/components/Editor/AceEditor.vue'
 import { commonStyle, commonAttr } from '@/custom-component/component-list'
 import eventBus from '@/utils/eventBus'
 import { $ } from '@/utils/utils'
 import changeComponentsSizeWithScale, { changeComponentSizeWithScale } from '@/utils/changeComponentsSizeWithScale'
 import { getComponentRotatedStyle } from '@/utils/style'
+import { ElMessage } from 'element-plus'
+import { Sunny, Moon, ArrowDown } from '@element-plus/icons-vue'
 
-export default {
-  components: { Preview, AceEditor },
-  data() {
-    return {
-      isShowPreview: false,
-      isShowAceEditor: false,
-      timer: null,
-      isScreenshot: false,
-      scale: 100,
-      switchValue: false,
-      isShowDialog: false,
-      jsonData: '',
-      isExport: false,
-      alignList: [
-        {
-          label: '左对齐',
-          value: 'leftAlign',
-        },
-        {
-          label: '水平居中',
-          value: 'centerAlign',
-        },
-        {
-          label: '右对齐',
-          value: 'rightAlign',
-        },
-        {
-          label: '顶对齐',
-          value: 'topAlign',
-        },
-        {
-          label: '垂直居中',
-          value: 'middleAlign',
-        },
-        {
-          label: '底对齐',
-          value: 'bottomAlign',
-        },
-        {
-          label: '水平等间距',
-          value: 'horizontalSpacing',
-          isDisabled: true,
-        },
-        {
-          label: '垂直等间距',
-          value: 'verticalSpacing',
-          isDisabled: true,
-        },
-      ],
-    }
-  },
-  computed: {
-    ...mapState(['componentData', 'canvasStyleData', 'areaData', 'curComponent', 'curComponentIndex', 'isDarkMode']),
-    showComponentAlign() {
-      return (this.curComponent && !this.curComponent.isLock) || this.areaData.components.length > 1
-    },
-  },
-  created() {
-    eventBus.$on('preview', this.preview)
-    eventBus.$on('save', this.save)
-    eventBus.$on('clearCanvas', this.clearCanvas)
+const store = useStore()
+const { componentData, canvasStyleData, areaData, curComponent, curComponentIndex, isDarkMode } = storeToRefs(store)
 
-    this.scale = this.canvasStyleData.scale
-    const savedMode = JSON.parse(localStorage.getItem('isDarkMode'))
-    if (savedMode) {
-      this.handleToggleDarkMode(savedMode)
-    }
-  },
-  methods: {
-    handleComponentAlign(command) {
-      this.$store.commit(command)
-      // 每次对齐后记录一次快照
-      this.$store.commit('recordSnapshot')
-      // 如果是多组件对齐, 则需要重新计算选中区域的大小和位置
-      let top = Infinity,
-        left = Infinity
-      let right = -Infinity,
-        bottom = -Infinity
-      if (this.areaData.components.length > 1) {
-        this.areaData.components.forEach((component) => {
-          let style = getComponentRotatedStyle(component.style)
-          if (style.left < left) left = style.left
-          if (style.top < top) top = style.top
-          if (style.right > right) right = style.right
-          if (style.bottom > bottom) bottom = style.bottom
-        })
-        this.$store.commit('setAreaData', {
-          style: {
-            left,
-            top,
-            width: right - left,
-            height: bottom - top,
+const isShowPreview = ref(false)
+const isShowAceEditor = ref(false)
+const timer = ref(null)
+const isScreenshot = ref(false)
+const scale = ref(100)
+const switchValue = ref(false)
+const isShowDialog = ref(false)
+const jsonData = ref('')
+const isExport = ref(false)
+const alignList = [
+  { label: '左对齐', value: 'leftAlign' },
+  { label: '水平居中', value: 'centerAlign' },
+  { label: '右对齐', value: 'rightAlign' },
+  { label: '顶对齐', value: 'topAlign' },
+  { label: '垂直居中', value: 'middleAlign' },
+  { label: '底对齐', value: 'bottomAlign' },
+  { label: '水平等间距', value: 'horizontalSpacing', isDisabled: true },
+  { label: '垂直等间距', value: 'verticalSpacing', isDisabled: true },
+]
+
+const showComponentAlign = computed(() => {
+  return (curComponent.value && !curComponent.value.isLock) || areaData.value.components.length > 1
+})
+
+onMounted(() => {
+  eventBus.on('preview', preview)
+  eventBus.on('save', save)
+  eventBus.on('clearCanvas', clearCanvas)
+
+  scale.value = canvasStyleData.value.scale
+  const savedMode = JSON.parse(localStorage.getItem('isDarkMode'))
+  if (savedMode) {
+    handleToggleDarkMode(savedMode)
+  }
+})
+
+function handleComponentAlign(command) {
+  store[command]()
+  store.recordSnapshot()
+  let top = Infinity,
+    left = Infinity
+  let right = -Infinity,
+    bottom = -Infinity
+  if (areaData.value.components.length > 1) {
+    areaData.value.components.forEach((component) => {
+      let style = getComponentRotatedStyle(component.style)
+      if (style.left < left) left = style.left
+      if (style.top < top) top = style.top
+      if (style.right > right) right = style.right
+      if (style.bottom > bottom) bottom = style.bottom
+    })
+    store.setAreaData({
+      style: {
+        left,
+        top,
+        width: right - left,
+        height: bottom - top,
+      },
+      components: areaData.value.components,
+    })
+  }
+}
+
+function handleToggleDarkMode(value) {
+  if (value !== null) {
+    store.toggleDarkMode(value)
+    switchValue.value = value
+  }
+}
+
+function handleScaleChange() {
+  clearTimeout(timer.value)
+  store.setLastScale(scale.value)
+  timer.value = setTimeout(() => {
+    scale.value = ~~scale.value || 1
+    changeComponentsSizeWithScale(scale.value)
+  }, 1000)
+}
+
+function onAceEditorChange() {
+  isShowAceEditor.value = !isShowAceEditor.value
+}
+
+function closeEditor() {
+  onAceEditorChange()
+}
+
+function lock() {
+  store.lock()
+}
+
+function unlock() {
+  store.unlock()
+}
+
+function compose() {
+  store.compose()
+  store.recordSnapshot()
+}
+
+function decompose() {
+  store.decompose()
+  store.recordSnapshot()
+}
+
+function undo() {
+  store.undo()
+}
+
+function redo() {
+  store.redo()
+}
+
+function handleFileChange(e) {
+  const file = e.target.files[0]
+  if (!file.type.includes('image')) {
+    toast('只能插入图片')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (res) => {
+    const fileResult = res.target.result
+    const img = new Image()
+    img.onload = () => {
+      const component = {
+        ...commonAttr,
+        id: generateID(),
+        component: 'Picture',
+        label: '图片',
+        icon: '',
+        propValue: {
+          url: fileResult,
+          flip: {
+            horizontal: false,
+            vertical: false,
           },
-          components: this.areaData.components,
-        })
+        },
+        style: {
+          ...commonStyle,
+          top: 0,
+          left: 0,
+          width: img.width,
+          height: img.height,
+        },
       }
-    },
-    handleToggleDarkMode(value) {
-      if (value !== null) {
-        this.$store.commit('toggleDarkMode', value)
-        this.switchValue = value
+      changeComponentSizeWithScale(component)
+      store.addComponent({ component })
+      store.recordSnapshot()
+      $('#input').setAttribute('type', 'text')
+      $('#input').setAttribute('type', 'file')
+    }
+    img.src = fileResult
+  }
+  reader.readAsDataURL(file)
+}
+
+function preview(isScreenshotVal) {
+  isScreenshot.value = isScreenshotVal
+  isShowPreview.value = true
+  store.setEditMode('preview')
+}
+
+function save() {
+  localStorage.setItem('canvasData', JSON.stringify(componentData.value))
+  localStorage.setItem('canvasStyle', JSON.stringify(canvasStyleData.value))
+  ElMessage.success('保存成功')
+}
+
+function clearCanvas() {
+  store.setCurComponent({ component: null, index: null })
+  store.setComponentData([])
+  store.recordSnapshot()
+}
+
+function handlePreviewChange() {
+  isShowPreview.value = false
+  store.setEditMode('edit')
+}
+
+function onImportJSON() {
+  jsonData.value = ''
+  isExport.value = false
+  isShowDialog.value = true
+}
+
+function processJSON() {
+  try {
+    const data = JSON.parse(jsonData.value)
+    if (isExport.value) {
+      downloadFileUtil(jsonData.value, 'application/json', 'data.json')
+    } else if (Array.isArray(data)) {
+      store.setComponentData(data)
+    } else if (data && typeof data === 'object') {
+      if (data.componentData && Array.isArray(data.componentData)) {
+        store.setComponentData(data.componentData)
       }
-    },
-    handleScaleChange() {
-      clearTimeout(this.timer)
-      this.$store.commit('setLastScale', this.scale)
-      this.timer = setTimeout(() => {
-        // 画布比例设一个最小值，不能为 0
-        // eslint-disable-next-line no-bitwise
-        this.scale = ~~this.scale || 1
-        changeComponentsSizeWithScale(this.scale)
-      }, 1000)
-    },
-
-    onAceEditorChange() {
-      this.isShowAceEditor = !this.isShowAceEditor
-    },
-
-    closeEditor() {
-      this.onAceEditorChange()
-    },
-
-    lock() {
-      this.$store.commit('lock')
-    },
-
-    unlock() {
-      this.$store.commit('unlock')
-    },
-
-    compose() {
-      this.$store.commit('compose')
-      this.$store.commit('recordSnapshot')
-    },
-
-    decompose() {
-      this.$store.commit('decompose')
-      this.$store.commit('recordSnapshot')
-    },
-
-    undo() {
-      this.$store.commit('undo')
-    },
-
-    redo() {
-      this.$store.commit('redo')
-    },
-
-    handleFileChange(e) {
-      const file = e.target.files[0]
-      if (!file.type.includes('image')) {
-        toast('只能插入图片')
-        return
+      if (data.canvasStyleData && typeof data.canvasStyleData === 'object') {
+        store.setCanvasStyle(data.canvasStyleData)
       }
+    } else {
+      ElMessage.error('数据格式错误，请传入合法的 JSON 格式数据')
+      return
+    }
+    isShowDialog.value = false
+  } catch (error) {
+    ElMessage.error('数据格式错误，请传入合法的 JSON 格式数据')
+  }
+}
 
-      const reader = new FileReader()
-      reader.onload = (res) => {
-        const fileResult = res.target.result
-        const img = new Image()
-        img.onload = () => {
-          const component = {
-            ...commonAttr,
-            id: generateID(),
-            component: 'Picture',
-            label: '图片',
-            icon: '',
-            propValue: {
-              url: fileResult,
-              flip: {
-                horizontal: false,
-                vertical: false,
-              },
-            },
-            style: {
-              ...commonStyle,
-              top: 0,
-              left: 0,
-              width: img.width,
-              height: img.height,
-            },
-          }
+function onExportJSON() {
+  isShowDialog.value = true
+  isExport.value = true
+  const exportData = {
+    componentData: componentData.value,
+    canvasStyleData: canvasStyleData.value,
+  }
+  jsonData.value = JSON.stringify(exportData, null, 4)
+}
 
-          // 根据画面比例修改组件样式比例 https://github.com/woai3c/visual-drag-demo/issues/91
-          changeComponentSizeWithScale(component)
+function downloadFileUtil(data, type, fileName = '') {
+  const url = window.URL.createObjectURL(new Blob([data], { type }))
+  const link = document.createElement('a')
+  link.style.display = 'none'
+  link.href = url
+  link.setAttribute('download', fileName)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
+}
 
-          this.$store.commit('addComponent', { component })
-          this.$store.commit('recordSnapshot')
-
-          // 修复重复上传同一文件，@change 不触发的问题
-          $('#input').setAttribute('type', 'text')
-          $('#input').setAttribute('type', 'file')
-        }
-
-        img.src = fileResult
-      }
-
-      reader.readAsDataURL(file)
-    },
-
-    preview(isScreenshot) {
-      this.isScreenshot = isScreenshot
-      this.isShowPreview = true
-      this.$store.commit('setEditMode', 'preview')
-    },
-
-    save() {
-      localStorage.setItem('canvasData', JSON.stringify(this.componentData))
-      localStorage.setItem('canvasStyle', JSON.stringify(this.canvasStyleData))
-      this.$message.success('保存成功')
-    },
-
-    clearCanvas() {
-      this.$store.commit('setCurComponent', {
-        component: null,
-        index: null,
-      })
-      this.$store.commit('setComponentData', [])
-      this.$store.commit('recordSnapshot')
-    },
-
-    handlePreviewChange() {
-      this.isShowPreview = false
-      this.$store.commit('setEditMode', 'edit')
-    },
-
-    onImportJSON() {
-      this.jsonData = ''
-      this.isExport = false
-      this.isShowDialog = true
-    },
-
-    processJSON() {
-      try {
-        const data = JSON.parse(this.jsonData)
-
-        if (this.isExport) {
-          this.downloadFileUtil(this.jsonData, 'application/json', 'data.json')
-        } else if (Array.isArray(data)) {
-          // 兼容旧格式：纯数组，只包含组件数据
-          this.$store.commit('setComponentData', data)
-        } else if (data && typeof data === 'object') {
-          // 新格式：包含 componentData 和 canvasStyleData
-          if (data.componentData && Array.isArray(data.componentData)) {
-            this.$store.commit('setComponentData', data.componentData)
-          }
-          if (data.canvasStyleData && typeof data.canvasStyleData === 'object') {
-            this.$store.commit('setCanvasStyle', data.canvasStyleData)
-          }
-        } else {
-          this.$message.error('数据格式错误，请传入合法的 JSON 格式数据')
-          return
-        }
-
-        this.isShowDialog = false
-      } catch (error) {
-        this.$message.error('数据格式错误，请传入合法的 JSON 格式数据')
-      }
-    },
-
-    onExportJSON() {
-      this.isShowDialog = true
-      this.isExport = true
-      // 导出时包含组件数据和画布样式数据
-      const exportData = {
-        componentData: this.componentData,
-        canvasStyleData: this.canvasStyleData,
-      }
-      this.jsonData = JSON.stringify(exportData, null, 4)
-    },
-
-    downloadFileUtil(data, type, fileName = '') {
-      const url = window.URL.createObjectURL(new Blob([data], { type }))
-      const link = document.createElement('a')
-
-      link.style.display = 'none'
-      link.href = url
-      link.setAttribute('download', fileName)
-      document.body.appendChild(link)
-      link.click()
-
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-    },
-
-    beforeUpload(e) {
-      // 通过json文件导入
-      const reader = new FileReader()
-      reader.readAsText(e)
-      const self = this
-      reader.onload = function () {
-        self.jsonData = this.result
-        console.log(this.result)
-      }
-
-      return false
-    },
-  },
+function beforeUpload(e) {
+  const reader = new FileReader()
+  reader.readAsText(e)
+  reader.onload = function () {
+    jsonData.value = this.result
+  }
+  return false
 }
 </script>
 

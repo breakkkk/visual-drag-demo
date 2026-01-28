@@ -6,7 +6,7 @@
       <div>
         <el-tag v-for="(tag, index) in curComponent.animations" :key="index" closable @close="removeAnimation(index)">
           {{ tag.label }}
-          <i class="cursor el-icon-setting" @click="handleAnimationSetting(index)"></i>
+          <el-icon class="cursor" @click="handleAnimationSetting(index)"><Setting /></el-icon>
         </el-tag>
       </div>
     </div>
@@ -18,7 +18,7 @@
           <el-scrollbar class="animate-container">
             <div
               v-for="animate in item.children"
-              :ref="animate.value"
+              :ref="(el) => setAnimationRef(el, animate.value)"
               :key="animate.value"
               class="animate"
               @mouseenter="runAnimation(animate)"
@@ -41,64 +41,62 @@
   </div>
 </template>
 
-<script>
-import Modal from '@/components/Modal'
+<script setup>
+import { ref } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import Modal from '@/components/Modal.vue'
+import AnimationSettingModal from './AnimationSettingModal.vue'
 import eventBus from '@/utils/eventBus'
 import animationClassData from '@/utils/animationClassData'
-import { mapState } from 'vuex'
-import runAnimation from '@/utils/runAnimation'
-import AnimationSettingModal from './AnimationSettingModal.vue'
+import runAnimationFn from '@/utils/runAnimation'
+import { Setting } from '@element-plus/icons-vue'
 
-export default {
-  components: { Modal, AnimationSettingModal },
-  data() {
-    return {
-      isShowAnimation: false,
-      hoverPreviewAnimate: '',
-      animationActiveName: '进入',
-      animationClassData,
-      showAnimatePanel: false,
-      timer: null,
-      isShowAnimationSetting: false,
-      curIndex: 0,
-    }
-  },
-  computed: mapState(['curComponent']),
-  methods: {
-    addAnimation(animate) {
-      this.$store.commit('addAnimation', animate)
-      this.isShowAnimation = false
-    },
+const store = useStore()
+const { curComponent } = storeToRefs(store)
 
-    previewAnimate() {
-      eventBus.$emit('runAnimation')
-    },
+const isShowAnimation = ref(false)
+const animationActiveName = ref('进入')
+const isShowAnimationSetting = ref(false)
+const curIndex = ref(0)
+const animationRefs = ref({})
 
-    removeAnimation(index) {
-      this.$store.commit('removeAnimation', index)
-      if (!this.curComponent.animations.length) {
-        // 清空动画数据，停止运动
-        eventBus.$emit('stopAnimation')
-      }
-    },
+const setAnimationRef = (el, key) => {
+  if (el) {
+    animationRefs.value[key] = el
+  }
+}
 
-    handleAnimationSetting(index) {
-      this.isShowAnimationSetting = true
-      this.curIndex = index
-    },
+function addAnimation(animate) {
+  store.addAnimation(animate)
+  isShowAnimation.value = false
+}
 
-    async runAnimation(animate) {
-      if (animate.pending) return
+function previewAnimate() {
+  eventBus.emit('runAnimation')
+}
 
-      animate.pending = true
-      await runAnimation(this.$refs[animate.value][0], [animate])
+function removeAnimation(index) {
+  store.removeAnimation(index)
+  if (!curComponent.value.animations.length) {
+    eventBus.emit('stopAnimation')
+  }
+}
 
-      // 防止无限触发同一元素的动画
-      setTimeout(() => {
-        animate.pending = false
-      }, 100)
-    },
-  },
+function handleAnimationSetting(index) {
+  isShowAnimationSetting.value = true
+  curIndex.value = index
+}
+
+async function runAnimation(animate) {
+  if (animate.pending) return
+
+  animate.pending = true
+  await runAnimationFn(animationRefs.value[animate.value], [animate])
+
+  setTimeout(() => {
+    animate.pending = false
+  }, 100)
 }
 </script>
 
@@ -106,6 +104,7 @@ export default {
 .animation-list {
   .cursor {
     cursor: pointer;
+    margin-left: 5px;
   }
 
   .div-animation {
@@ -116,7 +115,9 @@ export default {
     }
 
     .el-tag {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 50%;
       margin: auto;
       margin-bottom: 10px;

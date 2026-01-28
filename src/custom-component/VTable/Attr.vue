@@ -13,16 +13,15 @@
   </div>
 </template>
 
-<script>
-import CommonAttr from '@/custom-component/common/CommonAttr'
-import EditTable from './EditTable'
+<script setup>
+import { computed } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import CommonAttr from '@/custom-component/common/CommonAttr.vue'
+import EditTable from './EditTable.vue'
 
-export default {
-  components: { EditTable, CommonAttr },
-  computed: {
-    propValue() {
-      return this.$store.state.curComponent.propValue
-    },
-  },
-}
+const store = useStore()
+const { curComponent } = storeToRefs(store)
+
+const propValue = computed(() => curComponent.value.propValue)
 </script>

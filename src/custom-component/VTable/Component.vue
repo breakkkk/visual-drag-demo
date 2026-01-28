@@ -1,5 +1,5 @@
 <template>
-  <table class="v-table">
+  <table ref="tableRef" class="v-table">
     <tbody>
       <tr
         v-for="(item, index) in propValue.data"
@@ -15,40 +15,46 @@
   </table>
 </template>
 
-<script>
-import request from '@/utils/request'
-import OnEvent from '../common/OnEvent'
+<script setup>
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+import requestFn from '@/utils/request'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: Object,
-      default: () => {},
-    },
-    request: {
-      type: Object,
-      default: () => {},
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      cancelRequest: null,
-    }
+  request: {
+    type: Object,
+    default: () => {},
   },
-  created() {
-    if (this.request) {
-      this.cancelRequest = request(this.request, this.propValue, 'data')
-    }
+  element: {
+    type: Object,
+    default: () => {},
   },
-  beforeDestroy() {
-    this.request && this.cancelRequest()
+  linkage: {
+    type: Object,
+    default: () => {},
   },
-}
+})
+
+let cancelRequest = null
+const tableRef = ref(null)
+
+useOnEvent(props, tableRef)
+
+onMounted(() => {
+  if (props.request) {
+    cancelRequest = requestFn(props.request, props.propValue, 'data')
+  }
+})
+
+onBeforeUnmount(() => {
+  if (props.request && cancelRequest) {
+    cancelRequest()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

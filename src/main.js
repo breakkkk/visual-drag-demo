@@ -1,23 +1,23 @@
-import Vue from 'vue'
-import ElementUI from 'element-ui'
-import App from './App'
-import store from './store'
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import App from './App.vue'
 import router from './router'
-import '@/custom-component' // 注册自定义组件
+import { createPinia } from 'pinia'
+import customComponent from '@/custom-component'
 
 import '@/assets/iconfont/iconfont.css'
 import '@/styles/animate.scss'
-import 'element-ui/lib/theme-chalk/index.css'
 import '@/styles/reset.css'
 import '@/styles/global.scss'
 import '@/styles/dark.scss'
 
-Vue.use(ElementUI, { size: 'small' })
-Vue.config.productionTip = false
+const app = createApp(App)
+const pinia = createPinia()
 
-new Vue({
-  el: '#app',
-  router,
-  store,
-  render: (h) => h(App),
-})
+app.use(ElementPlus, { size: 'small' })
+app.use(pinia)
+app.use(router)
+app.use(customComponent)
+
+app.mount('#app')

@@ -4,7 +4,11 @@
       <el-collapse-item title="通用样式" name="style">
         <el-form>
           <el-form-item v-for="({ key, label }, index) in styleKeys" :key="index" :label="label">
-            <el-color-picker v-if="isIncludesColor(key)" v-model="curComponent.style[key]" show-alpha></el-color-picker>
+            <el-color-picker
+              v-if="isIncludesColor(key)"
+              v-model="curComponent.style[key]"
+              show-alpha
+            ></el-color-picker>
             <el-select v-else-if="selectKey.includes(key)" v-model="curComponent.style[key]">
               <el-option
                 v-for="item in optionMap[key]"
@@ -29,7 +33,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import {
   styleData,
   textAlignOptions,
@@ -38,66 +45,52 @@ import {
   selectKey,
   optionMap,
 } from '@/utils/attr'
-import Request from './Request'
-import Linkage from './Linkage'
+import Request from './Request.vue'
+import Linkage from './Linkage.vue'
 
-export default {
-  components: { Request, Linkage },
-  data() {
-    return {
-      optionMap,
-      styleData,
-      textAlignOptions,
-      borderStyleOptions,
-      verticalAlignOptions,
-      selectKey,
-      activeName: '',
-    }
-  },
-  computed: {
-    styleKeys() {
-      if (this.curComponent) {
-        const curComponentStyleKeys = Object.keys(this.curComponent.style)
-        return this.styleData.filter((item) => curComponentStyleKeys.includes(item.key))
-      }
+const store = useStore()
+const { curComponent } = storeToRefs(store)
 
-      return []
-    },
-    curComponent() {
-      return this.$store.state.curComponent
-    },
-  },
-  watch: {
-    curComponent() {
-      this.activeName = this.curComponent.collapseName
-    },
-  },
-  created() {
-    this.activeName = this.curComponent.collapseName
-  },
-  methods: {
-    setInitial(style) {
-      this.initialStyle = JSON.parse(JSON.stringify(style))
-    },
-    setFontSize() {
-      const proportion = this.curComponent.style.fontSize / this.initialStyle.fontSize
-      const updatedStyle = {
-        width: (proportion * this.initialStyle.width).toFixed(4),
-        height: (proportion * this.initialStyle.height).toFixed(4),
-        padding: (proportion * this.initialStyle.padding).toFixed(4),
-      }
-      this.curComponent.style = { ...this.curComponent.style, ...updatedStyle }
-      this.$store.commit('setShapeStyle', this.curComponent.style)
-      this.$store.commit('recordSnapshot')
-    },
-    onChange() {
-      this.curComponent.collapseName = this.activeName
-    },
+const activeName = ref('')
+const initialStyle = ref(null)
 
-    isIncludesColor(str) {
-      return str.toLowerCase().includes('color')
-    },
-  },
+const styleKeys = computed(() => {
+  if (curComponent.value) {
+    const curComponentStyleKeys = Object.keys(curComponent.value.style)
+    return styleData.filter((item) => curComponentStyleKeys.includes(item.key))
+  }
+  return []
+})
+
+watch(curComponent, () => {
+  activeName.value = curComponent.value.collapseName
+})
+
+onMounted(() => {
+  activeName.value = curComponent.value.collapseName
+})
+
+function setInitial(style) {
+  initialStyle.value = JSON.parse(JSON.stringify(style))
+}
+
+function setFontSize() {
+  const proportion = curComponent.value.style.fontSize / initialStyle.value.fontSize
+  const updatedStyle = {
+    width: (proportion * initialStyle.value.width).toFixed(4),
+    height: (proportion * initialStyle.value.height).toFixed(4),
+    padding: (proportion * initialStyle.value.padding).toFixed(4),
+  }
+  store.setShapeStyle(updatedStyle)
+  store.recordSnapshot()
+}
+
+function onChange() {
+  curComponent.value.collapseName = activeName.value
+}
+
+function isIncludesColor(str) {
+  return str.toLowerCase().includes('color')
 }
 </script>
 

@@ -1,15 +1,18 @@
-import Vue from 'vue'
+import { defineAsyncComponent } from 'vue'
 
 const components = ['CircleShape', 'Picture', 'VText', 'VButton', 'Group', 'RectShape', 'LineShape', 'VTable', 'VChart']
-
-components.forEach((key) => {
-  Vue.component(key, () => import(`@/custom-component/${key}/Component`))
-  Vue.component(`${key}Attr`, () => import(`@/custom-component/${key}/Attr`))
-})
-
 const svgs = ['SVGStar', 'SVGTriangle']
 
-svgs.forEach((key) => {
-  Vue.component(key, () => import(`@/custom-component/svgs/${key}/Component`))
-  Vue.component(`${key}Attr`, () => import(`@/custom-component/svgs/${key}/Attr`))
-})
+export default {
+  install(app) {
+    components.forEach((key) => {
+      app.component(key, defineAsyncComponent(() => import(`@/custom-component/${key}/Component.vue`)))
+      app.component(`${key}Attr`, defineAsyncComponent(() => import(`@/custom-component/${key}/Attr.vue`)))
+    })
+
+    svgs.forEach((key) => {
+      app.component(key, defineAsyncComponent(() => import(`@/custom-component/svgs/${key}/Component.vue`)))
+      app.component(`${key}Attr`, defineAsyncComponent(() => import(`@/custom-component/svgs/${key}/Attr.vue`)))
+    })
+  }
+}

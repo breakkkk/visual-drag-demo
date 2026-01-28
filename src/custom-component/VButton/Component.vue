@@ -1,23 +1,28 @@
 <template>
-  <button class="v-button">{{ propValue }}</button>
+  <button ref="btnRef" class="v-button">{{ propValue }}</button>
 </template>
 
-<script>
-import OnEvent from '../common/OnEvent'
+<script setup>
+import { ref } from 'vue'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: String,
-      default: '',
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: String,
+    default: '',
   },
-}
+  element: {
+    type: Object,
+    default: () => {},
+  },
+  linkage: {
+    type: Object,
+    default: () => {},
+  },
+})
+
+const btnRef = ref(null)
+useOnEvent(props, btnRef)
 </script>
 
 <style lang="scss" scoped>

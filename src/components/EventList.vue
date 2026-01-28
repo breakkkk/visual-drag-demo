@@ -2,7 +2,7 @@
   <div class="event-list">
     <div class="div-events">
       <el-button @click="isShowEvent = true">添加事件</el-button>
-      <div>
+      <div class="event-tag-list">
         <el-tag v-for="event in Object.keys(curComponent.events)" :key="event" closable @close="removeEvent(event)">
           {{ event }}
         </el-tag>
@@ -24,14 +24,14 @@
             v-model="item.param"
             type="textarea"
             placeholder="请输入完整的 URL"
-            @keydown.native.stop
+            @keydown.stop
           />
           <el-input
             v-if="item.key == 'alert'"
             v-model="item.param"
             type="textarea"
             placeholder="请输入要 alert 的内容"
-            @keydown.native.stop
+            @keydown.stop
           />
           <el-button style="margin-top: 20px" @click="addEvent(item.key, item.param)">确定</el-button>
         </el-tab-pane>
@@ -40,32 +40,27 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
-import Modal from '@/components/Modal'
+<script setup>
+import { ref } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import Modal from '@/components/Modal.vue'
 import { eventList } from '@/utils/events'
 
-export default {
-  components: { Modal },
-  data() {
-    return {
-      isShowEvent: false,
-      eventURL: '',
-      eventActiveName: 'redirect',
-      eventList,
-    }
-  },
-  computed: mapState(['curComponent']),
-  methods: {
-    addEvent(event, param) {
-      this.isShowEvent = false
-      this.$store.commit('addEvent', { event, param })
-    },
+const store = useStore()
+const { curComponent } = storeToRefs(store)
 
-    removeEvent(event) {
-      this.$store.commit('removeEvent', event)
-    },
-  },
+const isShowEvent = ref(false)
+const eventURL = ref('')
+const eventActiveName = ref('redirect')
+
+function addEvent(event, param) {
+  isShowEvent.value = false
+  store.addEvent({ event, param })
+}
+
+function removeEvent(event) {
+  store.removeEvent(event)
 }
 </script>
 
@@ -80,11 +75,10 @@ export default {
       margin-bottom: 10px;
     }
 
-    .el-tag {
-      display: block;
-      width: 50%;
-      margin: auto;
-      margin-bottom: 10px;
+    .event-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
     }
   }
 }

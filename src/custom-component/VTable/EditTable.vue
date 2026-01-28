@@ -29,79 +29,74 @@
   </div>
 </template>
 
-<script>
-export default {
-  directives: {
-    focus: {
-      // 指令的定义
-      inserted(el) {
-        // 聚焦元素
-        el.querySelector('input').focus()
-      },
-    },
-  },
-  data() {
-    return {
-      curProperty: '',
-      curTd: '',
-      canEdit: false,
-      preCurTd: '', // 失焦时 curTd 值为空，这时删除会读不到值，因此用这个变量来代替，用于删除行列
-    }
-  },
-  computed: {
-    tableData() {
-      return this.$store.state.curComponent.propValue.data
-    },
-  },
-  methods: {
-    onDblclick() {
-      this.canEdit = true
-    },
+<script setup>
+import { ref, computed } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import { ElMessage } from 'element-plus'
 
-    onClick(row, col) {
-      this.curTd = `${row},${col}`
-      this.preCurTd = this.curTd
-    },
+const store = useStore()
+const { curComponent } = storeToRefs(store)
 
-    onBlur() {
-      this.canEdit = false
-      this.curTd = ''
-    },
+const curProperty = ref('')
+const curTd = ref('')
+const canEdit = ref(false)
+const preCurTd = ref('')
 
-    deleteRow() {
-      if (!this.preCurTd) {
-        this.$message.error('请先选择要删除的行')
-        return
-      }
+const tableData = computed(() => curComponent.value.propValue.data)
 
-      const row = this.preCurTd.split(',')[0]
-      this.tableData.splice(row, 1)
-    },
+const vFocus = {
+  mounted: (el) => {
+    el.querySelector('input').focus()
+  }
+}
 
-    addRow() {
-      this.tableData.push(new Array(this.tableData[0]?.length || 1).fill(' '))
-    },
+function onDblclick() {
+  canEdit.value = true
+}
 
-    addCol() {
-      if (this.tableData.length) {
-        this.tableData.forEach((item) => item.push(' '))
-      } else {
-        this.tableData.push([' '])
-      }
-    },
+function onClick(row, col) {
+  curTd.value = `${row},${col}`
+  preCurTd.value = curTd.value
+}
 
-    deleteCol() {
-      if (!this.preCurTd) {
-        this.$message.error('请先选择要删除的列')
-        return
-      }
+function onBlur() {
+  canEdit.value = false
+  curTd.value = ''
+}
 
-      const col = this.preCurTd.split(',')[1]
-      this.tableData.forEach((item) => {
-        item.splice(col, 1)
-      })
-    },
-  },
+function deleteRow() {
+  if (!preCurTd.value) {
+    ElMessage.error('请先选择要删除的行')
+    return
+  }
+
+  const row = preCurTd.value.split(',')[0]
+  tableData.value.splice(row, 1)
+}
+
+function addRow() {
+  tableData.value.push(new Array(tableData.value[0]?.length || 1).fill(' '))
+}
+
+function addCol() {
+  if (tableData.value.length) {
+    tableData.value.forEach((item) => item.push(' '))
+  } else {
+    tableData.value.push([' '])
+  }
+}
+
+function deleteCol() {
+  if (!preCurTd.value) {
+    ElMessage.error('请先选择要删除的列')
+    return
+  }
+
+  const col = preCurTd.value.split(',')[1]
+  tableData.value.forEach((item) => {
+    item.splice(col, 1)
+  })
 }
 </script>
 

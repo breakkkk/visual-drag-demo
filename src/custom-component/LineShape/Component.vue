@@ -1,13 +1,24 @@
 <template>
-  <div class="line-shape"></div>
+  <div ref="lineRef" class="line-shape"></div>
 </template>
 
-<script>
-import OnEvent from '../common/OnEvent'
+<script setup>
+import { ref } from 'vue'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-}
+const props = defineProps({
+  element: {
+    type: Object,
+    default: () => {},
+  },
+  linkage: {
+    type: Object,
+    default: () => {},
+  },
+})
+
+const lineRef = ref(null)
+useOnEvent(props, lineRef)
 </script>
 
 <style lang="scss" scoped>

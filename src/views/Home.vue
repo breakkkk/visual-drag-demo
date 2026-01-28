@@ -11,7 +11,7 @@
       <el-button
         title="show-list-btn"
         class="btn show-list left-btn"
-        :icon="leftList ? 'el-icon-arrow-left' : 'el-icon-arrow-right'"
+        :icon="leftList ? 'ArrowLeft' : 'ArrowRight'"
         @click="isShowLeft"
       >
       </el-button>
@@ -45,7 +45,7 @@
       <el-button
         title="show-list-btn"
         class="btn show-list right-btn"
-        :icon="rightList ? 'el-icon-arrow-right' : 'el-icon-arrow-left'"
+        :icon="rightList ? 'ArrowRight' : 'ArrowLeft'"
         @click="isShowRight"
       >
       </el-button>
@@ -53,113 +53,103 @@
   </div>
 </template>
 
-<script>
-import Editor from '@/components/Editor/index'
-import ComponentList from '@/components/ComponentList' // 左侧列表组件
-import AnimationList from '@/components/AnimationList' // 右侧动画列表
-import EventList from '@/components/EventList' // 右侧事件列表
-import componentList from '@/custom-component/component-list' // 左侧列表数据
-import Toolbar from '@/components/Toolbar'
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useStore, setDefaultcomponentData } from '@/store'
+import { storeToRefs } from 'pinia'
+import Editor from '@/components/Editor/index.vue'
+import ComponentList from '@/components/ComponentList.vue'
+import AnimationList from '@/components/AnimationList.vue'
+import EventList from '@/components/EventList.vue'
+import Toolbar from '@/components/Toolbar.vue'
+import RealTimeComponentList from '@/components/RealTimeComponentList.vue'
+import CanvasAttr from '@/components/CanvasAttr.vue'
+import componentList from '@/custom-component/component-list'
 import { deepCopy } from '@/utils/utils'
-import { mapState } from 'vuex'
 import generateID from '@/utils/generateID'
 import { listenGlobalKeyDown } from '@/utils/shortcutKey'
-import RealTimeComponentList from '@/components/RealTimeComponentList'
-import CanvasAttr from '@/components/CanvasAttr'
 import { changeComponentSizeWithScale } from '@/utils/changeComponentsSizeWithScale'
-import { setDefaultcomponentData } from '@/store/snapshot'
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
-export default {
-  components: { Editor, ComponentList, AnimationList, EventList, Toolbar, RealTimeComponentList, CanvasAttr },
-  data() {
-    return {
-      activeName: 'attr',
-      reSelectAnimateIndex: undefined,
-      leftList: true,
-    }
-  },
-  computed: mapState([
-    'componentData',
-    'curComponent',
-    'isClickComponent',
-    'canvasStyleData',
-    'editor',
-    'rightList',
-    'isDarkMode',
-  ]),
-  created() {
-    this.restore()
-    // 全局监听按键事件
-    listenGlobalKeyDown()
-    const savedMode = localStorage.getItem('isDarkMode')
-    if (savedMode !== null) {
-      this.$store.commit('toggleDarkMode', JSON.parse(savedMode))
-    } else {
-      this.$store.isDarkMode = false
-    }
-  },
-  methods: {
-    restore() {
-      // 用保存的数据恢复画布
-      if (localStorage.getItem('canvasData')) {
-        setDefaultcomponentData(JSON.parse(localStorage.getItem('canvasData')))
-        this.$store.commit('setComponentData', JSON.parse(localStorage.getItem('canvasData')))
-      }
+const store = useStore()
+const { editMode, curComponent, rightList, isDarkMode } = storeToRefs(store)
+const activeName = ref('attr')
+const reSelectAnimateIndex = ref(undefined)
+const leftList = ref(true)
 
-      if (localStorage.getItem('canvasStyle')) {
-        this.$store.commit('setCanvasStyle', JSON.parse(localStorage.getItem('canvasStyle')))
-      }
-    },
+onMounted(() => {
+  restore()
+  // 全局监听按键事件
+  listenGlobalKeyDown()
+  const savedMode = localStorage.getItem('isDarkMode')
+  if (savedMode !== null) {
+    store.toggleDarkMode(JSON.parse(savedMode))
+  } else {
+    store.toggleDarkMode(false)
+  }
+})
 
-    handleDrop(e) {
-      e.preventDefault()
-      e.stopPropagation()
+function restore() {
+  // 用保存的数据恢复画布
+  if (localStorage.getItem('canvasData')) {
+    setDefaultcomponentData(JSON.parse(localStorage.getItem('canvasData')))
+    store.setComponentData(JSON.parse(localStorage.getItem('canvasData')))
+  }
 
-      const index = e.dataTransfer.getData('index')
-      const rectInfo = this.editor.getBoundingClientRect()
-      if (index) {
-        const component = deepCopy(componentList[index])
-        component.style.top = e.clientY - rectInfo.y
-        component.style.left = e.clientX - rectInfo.x
-        component.id = generateID()
+  if (localStorage.getItem('canvasStyle')) {
+    store.setCanvasStyle(JSON.parse(localStorage.getItem('canvasStyle')))
+  }
+}
 
-        // 根据画面比例修改组件样式比例
-        changeComponentSizeWithScale(component)
+function handleDrop(e) {
+  e.preventDefault()
+  e.stopPropagation()
 
-        this.$store.commit('addComponent', { component })
-        this.$store.commit('recordSnapshot')
-      }
-    },
+  const index = e.dataTransfer.getData('index')
+  const rectInfo = store.editor.getBoundingClientRect()
+  if (index) {
+    const component = deepCopy(componentList[index])
+    console.log(componentList, index)
+    component.style.top = e.clientY - rectInfo.y
+    component.style.left = e.clientX - rectInfo.x
+    component.id = generateID()
 
-    handleDragOver(e) {
-      e.preventDefault()
-      e.dataTransfer.dropEffect = 'copy'
-    },
+    // 根据画面比例修改组件样式比例
+    changeComponentSizeWithScale(component)
 
-    handleMouseDown(e) {
-      e.stopPropagation()
-      this.$store.commit('setClickComponentStatus', false)
-      this.$store.commit('setInEditorStatus', true)
-    },
+    store.addComponent({ component })
+    store.recordSnapshot()
+  }
+}
 
-    deselectCurComponent(e) {
-      if (!this.isClickComponent) {
-        this.$store.commit('setCurComponent', { component: null, index: null })
-      }
+function handleDragOver(e) {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'copy'
+}
 
-      // 0 左击 1 滚轮 2 右击
-      if (e.button != 2) {
-        this.$store.commit('hideContextMenu')
-      }
-    },
-    isShowLeft() {
-      let newleftList = !this.leftList
-      this.leftList = newleftList
-    },
-    isShowRight() {
-      this.$store.commit('isShowRightList')
-    },
-  },
+function handleMouseDown(e) {
+  e.stopPropagation()
+  store.setClickComponentStatus(false)
+  store.setInEditorStatus(true)
+}
+
+function deselectCurComponent(e) {
+  if (!store.isClickComponent) {
+    store.setCurComponent({ component: null, index: null })
+  }
+
+  // 0 左击 1 滚轮 2 右击
+  if (e.button != 2) {
+    store.hideContextMenu()
+  }
+}
+
+function isShowLeft() {
+  leftList.value = !leftList.value
+}
+
+function isShowRight() {
+  store.isShowRightList()
 }
 </script>
 
@@ -188,6 +178,7 @@ export default {
     }
 
     .left-btn {
+      left: 0;
       margin-left: 200px;
       border-radius: 0 50% 50% 0;
       padding: 9px 4px 9px 2px;
@@ -213,6 +204,7 @@ export default {
     .left {
       width: 200px;
       left: 0;
+      z-index: 2;
 
       .real-time-component-list .list:hover {
         color: var(--text-color);
@@ -272,6 +264,7 @@ export default {
       top: 0;
       transition: all 0.3s;
       background-color: var(--main-bg-color);
+      z-index: 2;
 
       .el-select {
         width: 100%;

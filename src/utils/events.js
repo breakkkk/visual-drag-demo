@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 // 编辑器自定义事件
 const events = {
   redirect(url) {
@@ -18,7 +20,7 @@ const mixins = {
   methods: events,
 }
 
-const eventList = [
+const eventList = ref([
   {
     key: 'redirect',
     label: '跳转事件',
@@ -31,6 +33,6 @@ const eventList = [
     event: events.alert,
     param: '',
   },
-]
+])
 
 export { mixins, events, eventList }

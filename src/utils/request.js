@@ -1,4 +1,4 @@
-import { Message } from 'element-ui'
+import { ElMessage } from 'element-plus'
 
 export const urlRE = /(https?):\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]/
 
@@ -78,7 +78,7 @@ export default function requestWarpper(options, obj, key, responseType = 'object
             obj[key] = data
           }
         })
-        .catch((err) => Message.error(err?.message || err))
+        .catch((err) => ElMessage.error(err?.message || err))
     } else {
       timer = setInterval(() => {
         if (options.requestCount != 0 && options.requestCount <= count) {
@@ -95,7 +95,7 @@ export default function requestWarpper(options, obj, key, responseType = 'object
               obj[key] = data
             }
           })
-          .catch((err) => Message.error(err?.message || err))
+          .catch((err) => ElMessage.error(err?.message || err))
       }, options.time)
     }
   }

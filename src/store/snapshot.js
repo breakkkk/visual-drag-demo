@@ -1,57 +1,41 @@
-import store from './index'
 import { deepCopy } from '@/utils/utils'
 import changeComponentsSizeWithScale from '@/utils/changeComponentsSizeWithScale'
+import { getDefaultcomponentData } from './defaults'
 
-// 设置画布默认数据 https://github.com/woai3c/visual-drag-demo/issues/92
-let defaultcomponentData = []
-function getDefaultcomponentData() {
-  return JSON.parse(JSON.stringify(defaultcomponentData))
+export const snapshotState = {
+  snapshotData: [],
+  snapshotIndex: -1,
 }
 
-export function setDefaultcomponentData(data = []) {
-  defaultcomponentData = data
-}
-
-export default {
-  state: {
-    snapshotData: [], // 编辑器快照数据
-    snapshotIndex: -1, // 快照索引
+export const snapshotActions = {
+  undo() {
+    if (this.snapshotIndex >= 0) {
+      this.snapshotIndex--
+      let componentData = deepCopy(this.snapshotData[this.snapshotIndex]) || getDefaultcomponentData()
+      componentData = changeComponentsSizeWithScale(this, this.lastScale, componentData)
+      this.setComponentData(componentData)
+      const curComponent = componentData.find((component) => component.id === this.curComponent?.id)
+      const index = curComponent ? componentData.indexOf(curComponent) : null
+      this.setCurComponent({ component: curComponent, index })
+    }
   },
-  mutations: {
-    undo(state) {
-      if (state.snapshotIndex >= 0) {
-        state.snapshotIndex--
-        let componentData = deepCopy(state.snapshotData[state.snapshotIndex]) || getDefaultcomponentData()
-
-        componentData = changeComponentsSizeWithScale(state.lastScale, componentData)
-        store.commit('setComponentData', componentData)
-        // 更新当前选中组件的引用
-        const curComponent = componentData.find((component) => component.id === state.curComponent?.id)
-        const index = curComponent ? componentData.indexOf(curComponent) : null
-        store.commit('setCurComponent', { component: curComponent, index })
-      }
-    },
-
-    redo(state) {
-      if (state.snapshotIndex < state.snapshotData.length - 1) {
-        state.snapshotIndex++
-        let componentData = changeComponentsSizeWithScale(
-          state.lastScale,
-          deepCopy(state.snapshotData[state.snapshotIndex]),
-        )
-        store.commit('setComponentData', componentData)
-      }
-    },
-
-    recordSnapshot(state) {
-      // 添加新的快照
-      let copyData = deepCopy(state.componentData)
-      copyData.forEach((v) => (v.lastScale = state.lastScale))
-      state.snapshotData[++state.snapshotIndex] = copyData
-      // 在 undo 过程中，添加新的快照时，要将它后面的快照清理掉
-      if (state.snapshotIndex < state.snapshotData.length - 1) {
-        state.snapshotData = state.snapshotData.slice(0, state.snapshotIndex + 1)
-      }
-    },
+  redo() {
+    if (this.snapshotIndex < this.snapshotData.length - 1) {
+      this.snapshotIndex++
+      let componentData = changeComponentsSizeWithScale(
+        this,
+        this.lastScale,
+        deepCopy(this.snapshotData[this.snapshotIndex]),
+      )
+      this.setComponentData(componentData)
+    }
+  },
+  recordSnapshot() {
+    let copyData = deepCopy(this.componentData)
+    copyData.forEach((v) => (v.lastScale = this.lastScale))
+    this.snapshotData[++this.snapshotIndex] = copyData
+    if (this.snapshotIndex < this.snapshotData.length - 1) {
+      this.snapshotData = this.snapshotData.slice(0, this.snapshotIndex + 1)
+    }
   },
 }

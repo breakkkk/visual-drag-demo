@@ -3,7 +3,7 @@
     <component
       :is="config.component"
       v-if="config.component.startsWith('SVG')"
-      ref="component"
+      ref="componentRef"
       class="component"
       :style="getSVGStyle(config.style)"
       :prop-value="config.propValue"
@@ -15,7 +15,7 @@
     <component
       :is="config.component"
       v-else
-      ref="component"
+      ref="componentRef"
       class="component"
       :style="getStyle(config.style)"
       :prop-value="config.propValue"
@@ -26,41 +26,39 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { onMounted, ref } from 'vue'
 import { getStyle, getSVGStyle } from '@/utils/style'
 import runAnimation from '@/utils/runAnimation'
-import { mixins } from '@/utils/events'
+import { events } from '@/utils/events'
 import eventBus from '@/utils/eventBus'
 
-export default {
-  mixins: [mixins],
-  props: {
-    config: {
-      type: Object,
-      required: true,
-      default: () => {},
-    },
+const props = defineProps({
+  config: {
+    type: Object,
+    required: true,
+    default: () => ({}),
   },
-  mounted() {
-    runAnimation(this.$refs.component.$el, this.config.animations)
-  },
-  methods: {
-    getStyle,
-    getSVGStyle,
+})
 
-    onClick() {
-      const events = this.config.events
-      Object.keys(events).forEach((event) => {
-        this[event](events[event])
-      })
+const componentRef = ref(null)
 
-      eventBus.$emit('v-click', this.config.id)
-    },
+onMounted(() => {
+  const el = componentRef.value?.$el || componentRef.value
+  runAnimation(el, props.config.animations)
+})
 
-    onMouseEnter() {
-      eventBus.$emit('v-hover', this.config.id)
-    },
-  },
+function onClick() {
+  const componentEvents = props.config.events
+  Object.keys(componentEvents).forEach((event) => {
+    events[event](componentEvents[event])
+  })
+
+  eventBus.emit('v-click', props.config.id)
+}
+
+function onMouseEnter() {
+  eventBus.emit('v-hover', props.config.id)
 }
 </script>
 

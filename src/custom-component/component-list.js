@@ -1,3 +1,4 @@
+import titleImg from '@/assets/title.jpg'
 // 公共样式
 export const commonStyle = {
   rotate: 0,
@@ -77,7 +78,7 @@ const list = [
     label: '图片',
     icon: 'tupian',
     propValue: {
-      url: require('@/assets/title.jpg'),
+      url: titleImg,
       flip: {
         horizontal: false,
         vertical: false,

@@ -3,7 +3,7 @@
   <div v-if="editMode == 'edit'" class="v-text" @keydown="handleKeydown" @keyup="handleKeyup">
     <!-- tabindex >= 0 使得双击时聚焦该元素 -->
     <div
-      ref="text"
+      ref="textRef"
       :contenteditable="canEdit"
       :class="{ 'can-edit': canEdit }"
       tabindex="0"
@@ -24,140 +24,136 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
+<script setup>
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import { keycodes } from '@/utils/shortcutKey.js'
-import request from '@/utils/request'
-import OnEvent from '../common/OnEvent'
+import requestFn from '@/utils/request'
 import eventBus from '@/utils/eventBus'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: String,
-      required: true,
-      default: '',
-    },
-    request: {
-      type: Object,
-      default: () => {},
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
-    linkage: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: String,
+    required: true,
+    default: '',
   },
-  data() {
-    return {
-      canEdit: false,
-      ctrlKey: 17,
-      isCtrlDown: false,
-      cancelRequest: null,
-    }
+  request: {
+    type: Object,
+    default: () => {},
   },
-  computed: {
-    ...mapState(['editMode', 'curComponent']),
+  element: {
+    type: Object,
+    default: () => {},
   },
-  created() {
-    // 注意，修改时接口属性时不会发数据，在预览时才会发
-    // 如果要在修改接口属性的同时发请求，需要 watch 一下 request 的属性
-    if (this.request) {
-      // 第二个参数是要修改数据的父对象，第三个参数是修改数据的 key，第四个数据修改数据的类型
-      this.cancelRequest = request(this.request, this.element, 'propValue', 'string')
-    }
-
-    eventBus.$on('componentClick', this.onComponentClick)
+  linkage: {
+    type: Object,
+    default: () => {},
   },
-  beforeDestroy() {
-    // 组件销毁时取消请求
-    this.request && this.cancelRequest()
-    eventBus.$off('componentClick', this.onComponentClick)
-  },
-  methods: {
-    onComponentClick() {
-      // 如果当前点击的组件 id 和 VText 不是同一个，需要设为不允许编辑 https://github.com/woai3c/visual-drag-demo/issues/90
-      if (this.curComponent.id !== this.element.id) {
-        this.canEdit = false
-      }
-    },
+})
 
-    handleInput(e) {
-      this.$emit('input', this.element, e.target.innerHTML)
-    },
+const emit = defineEmits(['input'])
 
-    handleKeydown(e) {
-      // 阻止冒泡，防止触发复制、粘贴组件操作
-      this.canEdit && e.stopPropagation()
-      if (e.keyCode == this.ctrlKey) {
-        this.isCtrlDown = true
-      } else if (this.isCtrlDown && this.canEdit && keycodes.includes(e.keyCode)) {
-        e.stopPropagation()
-      } else if (e.keyCode == 46) {
-        // deleteKey
-        e.stopPropagation()
-      }
-    },
+const store = useStore()
+const { editMode, curComponent } = storeToRefs(store)
 
-    handleKeyup(e) {
-      // 阻止冒泡，防止触发复制、粘贴组件操作
-      this.canEdit && e.stopPropagation()
-      if (e.keyCode == this.ctrlKey) {
-        this.isCtrlDown = false
-      }
-    },
+const canEdit = ref(false)
+const ctrlKey = 17
+const isCtrlDown = ref(false)
+let cancelRequest = null
+const textRef = ref(null)
 
-    handleMousedown(e) {
-      if (this.canEdit) {
-        e.stopPropagation()
-      }
-    },
+useOnEvent(props, textRef)
 
-    clearStyle(e) {
-      e.preventDefault()
-      const clp = e.clipboardData
-      const text = clp.getData('text/plain') || ''
-      if (text !== '') {
-        document.execCommand('insertText', false, text)
-      }
+onMounted(() => {
+  if (props.request) {
+    cancelRequest = requestFn(props.request, props.element, 'propValue', 'string')
+  }
+  eventBus.on('componentClick', onComponentClick)
+})
 
-      this.$emit('input', this.element, e.target.innerHTML)
-    },
+onBeforeUnmount(() => {
+  if (props.request && cancelRequest) {
+    cancelRequest()
+  }
+  eventBus.off('componentClick', onComponentClick)
+})
 
-    handleBlur(e) {
-      this.element.propValue = e.target.innerHTML || '&nbsp;'
-      const html = e.target.innerHTML
-      if (html !== '') {
-        this.element.propValue = e.target.innerHTML
-      } else {
-        this.element.propValue = ''
-        this.$nextTick(() => {
-          this.element.propValue = '&nbsp;'
-        })
-      }
-      this.canEdit = false
-    },
+function onComponentClick() {
+  if (curComponent.value && curComponent.value.id !== props.element.id) {
+    canEdit.value = false
+  }
+}
 
-    setEdit() {
-      if (this.element.isLock) return
+function handleInput(e) {
+  emit('input', props.element, e.target.innerHTML)
+}
 
-      this.canEdit = true
-      // 全选
-      this.selectText(this.$refs.text)
-    },
+function handleKeydown(e) {
+  if (canEdit.value) {
+    e.stopPropagation()
+  }
+  if (e.keyCode == ctrlKey) {
+    isCtrlDown.value = true
+  } else if (isCtrlDown.value && canEdit.value && keycodes.includes(e.keyCode)) {
+    e.stopPropagation()
+  } else if (e.keyCode == 46) {
+    e.stopPropagation()
+  }
+}
 
-    selectText(element) {
-      const selection = window.getSelection()
-      const range = document.createRange()
-      range.selectNodeContents(element)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    },
-  },
+function handleKeyup(e) {
+  if (canEdit.value) {
+    e.stopPropagation()
+  }
+  if (e.keyCode == ctrlKey) {
+    isCtrlDown.value = false
+  }
+}
+
+function handleMousedown(e) {
+  if (canEdit.value) {
+    e.stopPropagation()
+  }
+}
+
+function clearStyle(e) {
+  e.preventDefault()
+  const clp = e.clipboardData
+  const text = clp.getData('text/plain') || ''
+  if (text !== '') {
+    document.execCommand('insertText', false, text)
+  }
+  emit('input', props.element, e.target.innerHTML)
+}
+
+function handleBlur(e) {
+  props.element.propValue = e.target.innerHTML || '&nbsp;'
+  const html = e.target.innerHTML
+  if (html !== '') {
+    props.element.propValue = e.target.innerHTML
+  } else {
+    props.element.propValue = ''
+    nextTick(() => {
+      props.element.propValue = '&nbsp;'
+    })
+  }
+  canEdit.value = false
+}
+
+function setEdit() {
+  if (props.element.isLock) return
+  canEdit.value = true
+  selectText(textRef.value)
+}
+
+function selectText(element) {
+  const selection = window.getSelection()
+  const range = document.createRange()
+  range.selectNodeContents(element)
+  selection.removeAllRanges()
+  selection.addRange(range)
 }
 </script>
 

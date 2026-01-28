@@ -1,4 +1,4 @@
-import store from '@/store'
+import { useStore } from '@/store'
 import { divide, multiply } from 'mathjs'
 
 // 角度转弧度
@@ -130,7 +130,8 @@ export function mod360(deg) {
 }
 
 export function changeStyleWithScale(value) {
-  return multiply(value, divide(parseInt(store.state.canvasStyleData.scale), 100))
+  const store = useStore()
+  return multiply(value, divide(parseInt(store.canvasStyleData.scale), 100))
 }
 
 export function toPercent(val) {

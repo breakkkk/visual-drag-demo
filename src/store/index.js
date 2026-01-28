@@ -1,31 +1,24 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import animation from './animation'
-import compose from './compose'
-import contextmenu from './contextmenu'
-import copy from './copy'
-import event from './event'
-import layer from './layer'
-import snapshot from './snapshot'
-import lock from './lock'
-import align from './align'
+import { defineStore } from 'pinia'
+import { alignActions } from './align'
+import { animationActions } from './animation'
+import { composeState, composeActions } from './compose'
+import { contextmenuState, contextmenuActions } from './contextmenu'
+import { copyState, copyActions } from './copy'
+import { eventActions } from './event'
+import { layerActions } from './layer'
+import { lockActions } from './lock'
+import { snapshotState, snapshotActions } from './snapshot'
+import { setDefaultcomponentData } from './defaults'
 
-Vue.use(Vuex)
+// Export setDefaultcomponentData for compatibility
+export { setDefaultcomponentData }
 
-const data = {
-  state: {
-    ...animation.state,
-    ...compose.state,
-    ...contextmenu.state,
-    ...copy.state,
-    ...event.state,
-    ...layer.state,
-    ...snapshot.state,
-    ...lock.state,
-    lastScale: 100, // 记录快照上次的缩放比例，用于判断是否需要更新快照
-    editMode: 'edit', // 编辑器模式 edit preview
+export const useStore = defineStore('main', {
+  state: () => ({
+    // index.js state
+    lastScale: 100,
+    editMode: 'edit', // edit preview
     canvasStyleData: {
-      // 页面全局数据
       width: 1200,
       height: 740,
       scale: 100,
@@ -34,75 +27,64 @@ const data = {
       background: '#fff',
       fontSize: 14,
     },
-    isInEdiotr: false, // 是否在编辑器中，用于判断复制、粘贴组件时是否生效，如果在编辑器外，则无视这些操作
-    componentData: [], // 画布组件数据
+    isInEdiotr: false,
+    componentData: [],
     curComponent: null,
     curComponentIndex: null,
-    // 点击画布时是否点中组件，主要用于取消选中组件用。
-    // 如果没点中组件，并且在画布空白处弹起鼠标，则取消当前组件的选中状态
     isClickComponent: false,
     rightList: true,
     isDarkMode: false,
-  },
-  mutations: {
-    ...animation.mutations,
-    ...compose.mutations,
-    ...contextmenu.mutations,
-    ...copy.mutations,
-    ...event.mutations,
-    ...layer.mutations,
-    ...snapshot.mutations,
-    ...lock.mutations,
-    ...align.mutations,
-    aceSetCanvasData(state, value) {
-      state.canvasStyleData = value
+
+    // Merged states from modules
+    ...composeState,
+    ...contextmenuState,
+    ...copyState,
+    ...snapshotState,
+  }),
+
+  actions: {
+    // index.js mutations (now actions)
+    aceSetCanvasData(value) {
+      this.canvasStyleData = value
     },
-    setLastScale(state, value) {
-      state.lastScale = value
+    setLastScale(value) {
+      this.lastScale = value
     },
-    // 通过json设置组件
-    aceSetcurComponent(state, value) {
-      for (let i = 0; i < state.componentData.length; i++) {
-        if (state.componentData[i].id === value.id) {
-          state.componentData.splice(i, 1)
+    aceSetcurComponent(value) {
+      for (let i = 0; i < this.componentData.length; i++) {
+        if (this.componentData[i].id === value.id) {
+          this.componentData.splice(i, 1)
         }
       }
-      state.componentData.push(value)
-      state.curComponent = value
+      this.componentData.push(value)
+      this.curComponent = value
     },
-
-    setClickComponentStatus(state, status) {
-      state.isClickComponent = status
+    setClickComponentStatus(status) {
+      this.isClickComponent = status
     },
-
-    isShowRightList(state) {
-      state.rightList = !state.rightList
+    isShowRightList() {
+      this.rightList = !this.rightList
     },
-
-    toggleDarkMode(state, sateus) {
-      state.isDarkMode = sateus
-      state.canvasStyleData.background = sateus ? '#817f7f' : '#fff'
-      localStorage.setItem('isDarkMode', JSON.stringify(state.isDarkMode))
+    toggleDarkMode(status) {
+      this.isDarkMode = status
+      this.canvasStyleData.background = status ? '#817f7f' : '#fff'
+      localStorage.setItem('isDarkMode', JSON.stringify(this.isDarkMode))
     },
-
-    setEditMode(state, mode) {
-      state.editMode = mode
+    setEditMode(mode) {
+      this.editMode = mode
     },
-
-    setInEditorStatus(state, status) {
-      state.isInEdiotr = status
+    setInEditorStatus(status) {
+      this.isInEdiotr = status
     },
-
-    setCanvasStyle(state, style) {
-      state.canvasStyleData = style
+    setCanvasStyle(style) {
+      this.canvasStyleData = style
     },
-
-    setCurComponent(state, { component, index }) {
-      state.curComponent = component
-      state.curComponentIndex = index
+    setCurComponent({ component, index }) {
+      this.curComponent = component
+      this.curComponentIndex = index
     },
-
-    setShapeStyle({ curComponent }, { top, left, width, height, rotate, padding }) {
+    setShapeStyle({ top, left, width, height, rotate, padding }) {
+      const curComponent = this.curComponent
       if (top !== undefined) curComponent.style.top = Math.round(top)
       if (left !== undefined) curComponent.style.left = Math.round(left)
       if (width) curComponent.style.width = Math.round(width)
@@ -110,38 +92,41 @@ const data = {
       if (height) curComponent.style.height = Math.round(height)
       if (rotate) curComponent.style.rotate = Math.round(rotate)
     },
-
-    setShapeSingleStyle({ curComponent }, { key, value }) {
-      curComponent.style[key] = value
+    setShapeSingleStyle({ key, value }) {
+      this.curComponent.style[key] = value
     },
-
-    setComponentData(state, componentData = []) {
-      Vue.set(state, 'componentData', componentData)
+    setComponentData(componentData = []) {
+      this.componentData = componentData
     },
-
-    addComponent(state, { component, index }) {
+    addComponent({ component, index }) {
       if (index !== undefined) {
-        state.componentData.splice(index, 0, component)
+        this.componentData.splice(index, 0, component)
       } else {
-        state.componentData.push(component)
+        this.componentData.push(component)
       }
     },
-
-    deleteComponent(state, index) {
+    deleteComponent(index) {
       if (index === undefined) {
-        index = state.curComponentIndex
+        index = this.curComponentIndex
       }
-
-      if (index == state.curComponentIndex) {
-        state.curComponentIndex = null
-        state.curComponent = null
+      if (index == this.curComponentIndex) {
+        this.curComponentIndex = null
+        this.curComponent = null
       }
-
       if (/\d/.test(index)) {
-        state.componentData.splice(index, 1)
+        this.componentData.splice(index, 1)
       }
     },
-  },
-}
 
-export default new Vuex.Store(data)
+    // Merged actions from modules
+    ...alignActions,
+    ...animationActions,
+    ...composeActions,
+    ...contextmenuActions,
+    ...copyActions,
+    ...eventActions,
+    ...layerActions,
+    ...lockActions,
+    ...snapshotActions,
+  },
+})

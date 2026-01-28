@@ -1,5 +1,5 @@
 <template>
-  <div class="group">
+  <div ref="groupRef" class="group">
     <div>
       <component
         :is="item.component"
@@ -16,22 +16,27 @@
   </div>
 </template>
 
-<script>
-import OnEvent from '../common/OnEvent'
+<script setup>
+import { ref } from 'vue'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: Array,
-      default: () => [],
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: Array,
+    default: () => [],
   },
-}
+  element: {
+    type: Object,
+    default: () => {},
+  },
+  linkage: {
+    type: Object,
+    default: () => {},
+  },
+})
+
+const groupRef = ref(null)
+useOnEvent(props, groupRef)
 </script>
 
 <style lang="scss" scoped>

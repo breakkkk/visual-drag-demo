@@ -10,26 +10,22 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
+<script setup>
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 
-export default {
-  data() {
-    return {
-      options: {
-        color: '颜色',
-        opacity: '不透明度',
-        backgroundColor: '背景色',
-        fontSize: '字体大小',
-      },
-    }
-  },
-  computed: mapState(['canvasStyleData']),
-  methods: {
-    isIncludesColor(str) {
-      return str.toLowerCase().includes('color')
-    },
-  },
+const store = useStore()
+const { canvasStyleData } = storeToRefs(store)
+
+const options = {
+  color: '颜色',
+  opacity: '不透明度',
+  background: '背景色',
+  fontSize: '字体大小',
+}
+
+function isIncludesColor(str) {
+  return str.toLowerCase().includes('color') || str.toLowerCase().includes('background')
 }
 </script>
 

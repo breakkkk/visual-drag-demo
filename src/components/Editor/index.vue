@@ -29,7 +29,7 @@
         :is="item.component"
         v-if="item.component.startsWith('SVG')"
         :id="'component' + item.id"
-        :style="getSVGStyle(item.style)"
+        :style="getSVGStyleWrapper(item.style)"
         class="component"
         :prop-value="item.propValue"
         :element="item"
@@ -41,7 +41,7 @@
         v-else-if="item.component != 'VText'"
         :id="'component' + item.id"
         class="component"
-        :style="getComponentStyle(item.style)"
+        :style="getComponentStyleWrapper(item.style)"
         :prop-value="item.propValue"
         :element="item"
         :request="item.request"
@@ -52,7 +52,7 @@
         v-else
         :id="'component' + item.id"
         class="component"
-        :style="getComponentStyle(item.style)"
+        :style="getComponentStyleWrapper(item.style)"
         :prop-value="item.propValue"
         :element="item"
         :request="item.request"
@@ -70,236 +70,180 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
-import Shape from './Shape'
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import Shape from './Shape.vue'
+import ContextMenu from './ContextMenu.vue'
+import MarkLine from './MarkLine.vue'
+import Area from './Area.vue'
+import GroupComponentBox from './GroupComponentBox.vue'
+import Grid from './Grid.vue'
 import { getStyle, getComponentRotatedStyle, getShapeStyle, getSVGStyle, getCanvasStyle } from '@/utils/style'
 import { $, isPreventDrop } from '@/utils/utils'
-import ContextMenu from './ContextMenu'
-import MarkLine from './MarkLine'
-import Area from './Area'
-import GroupComponentBox from './GroupComponentBox'
 import eventBus from '@/utils/eventBus'
-import Grid from './Grid'
 import { changeStyleWithScale } from '@/utils/translate'
 
-export default {
-  components: { Shape, ContextMenu, MarkLine, Area, Grid, GroupComponentBox },
-  props: {
-    isEdit: {
-      type: Boolean,
-      default: true,
-    },
+const props = defineProps({
+  isEdit: {
+    type: Boolean,
+    default: true,
   },
-  data() {
-    return {
-      editorX: 0,
-      editorY: 0,
-      start: {
-        // 选中区域的起点
-        x: 0,
-        y: 0,
-      },
-      width: 0,
-      height: 0,
-      isShowArea: false,
-      svgFilterAttrs: ['width', 'height', 'top', 'left', 'rotate'],
+})
+
+const store = useStore()
+const { componentData, curComponent, canvasStyleData, editor, isDarkMode, areaData } = storeToRefs(store)
+
+const editorX = ref(0)
+const editorY = ref(0)
+const start = ref({ x: 0, y: 0 })
+const width = ref(0)
+const height = ref(0)
+const isShowArea = ref(false)
+const svgFilterAttrs = ['width', 'height', 'top', 'left', 'rotate']
+
+onMounted(() => {
+  store.getEditor()
+  eventBus.on('hideArea', hideArea)
+})
+
+function handleMouseDown(e) {
+  if (!curComponent.value || isPreventDrop(curComponent.value.component)) {
+    e.preventDefault()
+  }
+  hideArea()
+  const rectInfo = editor.value.getBoundingClientRect()
+  editorX.value = rectInfo.x
+  editorY.value = rectInfo.y
+  const startX = e.clientX
+  const startY = e.clientY
+  start.value.x = startX - editorX.value
+  start.value.y = startY - editorY.value
+  isShowArea.value = true
+
+  const move = (moveEvent) => {
+    width.value = Math.abs(moveEvent.clientX - startX)
+    height.value = Math.abs(moveEvent.clientY - startY)
+    if (moveEvent.clientX < startX) {
+      start.value.x = moveEvent.clientX - editorX.value
     }
-  },
-  computed: mapState(['componentData', 'curComponent', 'canvasStyleData', 'editor', 'isDarkMode', 'areaData']),
-  mounted() {
-    // 获取编辑器元素
-    this.$store.commit('getEditor')
+    if (moveEvent.clientY < startY) {
+      start.value.y = moveEvent.clientY - editorY.value
+    }
+  }
 
-    eventBus.$on('hideArea', () => {
-      this.hideArea()
-    })
-  },
-  methods: {
-    getShapeStyle,
-    getCanvasStyle,
-    changeStyleWithScale,
+  const up = (e) => {
+    document.removeEventListener('mousemove', move)
+    document.removeEventListener('mouseup', up)
+    if (e.clientX == startX && e.clientY == startY) {
+      hideArea()
+      return
+    }
+    createGroup()
+  }
 
-    handleMouseDown(e) {
-      // 如果没有选中组件 在画布上点击时需要调用 e.preventDefault() 防止触发 drop 事件
-      if (!this.curComponent || isPreventDrop(this.curComponent.component)) {
-        e.preventDefault()
-      }
+  document.addEventListener('mousemove', move)
+  document.addEventListener('mouseup', up)
+}
 
-      this.hideArea()
+function hideArea() {
+  isShowArea.value = false
+  width.value = 0
+  height.value = 0
+  store.setAreaData({
+    style: { left: 0, top: 0, width: 0, height: 0 },
+    components: [],
+  })
+}
 
-      // 获取编辑器的位移信息，每次点击时都需要获取一次。主要是为了方便开发时调试用。
-      const rectInfo = this.editor.getBoundingClientRect()
-      this.editorX = rectInfo.x
-      this.editorY = rectInfo.y
-
-      const startX = e.clientX
-      const startY = e.clientY
-      this.start.x = startX - this.editorX
-      this.start.y = startY - this.editorY
-      // 展示选中区域
-      this.isShowArea = true
-
-      const move = (moveEvent) => {
-        this.width = Math.abs(moveEvent.clientX - startX)
-        this.height = Math.abs(moveEvent.clientY - startY)
-        if (moveEvent.clientX < startX) {
-          this.start.x = moveEvent.clientX - this.editorX
-        }
-
-        if (moveEvent.clientY < startY) {
-          this.start.y = moveEvent.clientY - this.editorY
-        }
-      }
-
-      const up = (e) => {
-        document.removeEventListener('mousemove', move)
-        document.removeEventListener('mouseup', up)
-
-        if (e.clientX == startX && e.clientY == startY) {
-          this.hideArea()
-          return
-        }
-        this.createGroup()
-      }
-
-      document.addEventListener('mousemove', move)
-      document.addEventListener('mouseup', up)
-    },
-
-    hideArea() {
-      this.isShowArea = false
-      this.width = 0
-      this.height = 0
-
-      this.$store.commit('setAreaData', {
-        style: {
-          left: 0,
-          top: 0,
-          width: 0,
-          height: 0,
-        },
-        components: [],
-      })
-    },
-
-    createGroup() {
-      // 获取选中区域的组件数据
-      const areaData = this.getSelectArea()
-      if (areaData.length <= 1) {
-        this.hideArea()
-        return
-      }
-
-      // 根据选中区域和区域中每个组件的位移信息来创建 Group 组件
-      // 要遍历选择区域的每个组件，获取它们的 left top right bottom 信息来进行比较
-      let top = Infinity,
-        left = Infinity
-      let right = -Infinity,
-        bottom = -Infinity
-      areaData.forEach((component) => {
-        let style = {}
-        if (component.component == 'Group') {
-          component.propValue.forEach((item) => {
-            const rectInfo = $(`#component${item.id}`).getBoundingClientRect()
-            style.left = rectInfo.left - this.editorX
-            style.top = rectInfo.top - this.editorY
-            style.right = rectInfo.right - this.editorX
-            style.bottom = rectInfo.bottom - this.editorY
-
-            if (style.left < left) left = style.left
-            if (style.top < top) top = style.top
-            if (style.right > right) right = style.right
-            if (style.bottom > bottom) bottom = style.bottom
-          })
-        } else {
-          style = getComponentRotatedStyle(component.style)
-        }
-
+function createGroup() {
+  const areaDataResult = getSelectArea()
+  if (areaDataResult.length <= 1) {
+    hideArea()
+    return
+  }
+  let top = Infinity,
+    left = Infinity
+  let right = -Infinity,
+    bottom = -Infinity
+  areaDataResult.forEach((component) => {
+    let style = {}
+    if (component.component == 'Group') {
+      component.propValue.forEach((item) => {
+        const rectInfo = $(`#component${item.id}`).getBoundingClientRect()
+        style.left = rectInfo.left - editorX.value
+        style.top = rectInfo.top - editorY.value
+        style.right = rectInfo.right - editorX.value
+        style.bottom = rectInfo.bottom - editorY.value
         if (style.left < left) left = style.left
         if (style.top < top) top = style.top
         if (style.right > right) right = style.right
         if (style.bottom > bottom) bottom = style.bottom
       })
+    } else {
+      style = getComponentRotatedStyle(component.style)
+    }
+    if (style.left < left) left = style.left
+    if (style.top < top) top = style.top
+    if (style.right > right) right = style.right
+    if (style.bottom > bottom) bottom = style.bottom
+  })
+  start.value.x = left
+  start.value.y = top
+  width.value = right - left
+  height.value = bottom - top
+  store.setAreaData({
+    style: { left, top, width: width.value, height: height.value },
+    components: areaDataResult,
+  })
+  isShowArea.value = false
+}
 
-      this.start.x = left
-      this.start.y = top
-      this.width = right - left
-      this.height = bottom - top
+function getSelectArea() {
+  const result = []
+  const { x, y } = start.value
+  componentData.value.forEach((component) => {
+    if (component.isLock) return
+    const { left, top, width: w, height: h } = getComponentRotatedStyle(component.style)
+    if (x <= left && y <= top && left + w <= x + width.value && top + h <= y + height.value) {
+      result.push(component)
+    }
+  })
+  return result
+}
 
-      // 设置选中区域位移大小信息和区域内的组件数据
-      this.$store.commit('setAreaData', {
-        style: {
-          left,
-          top,
-          width: this.width,
-          height: this.height,
-        },
-        components: areaData,
-      })
-      this.isShowArea = false // 关闭选框
-    },
+function handleContextMenu(e) {
+  e.stopPropagation()
+  e.preventDefault()
+  let editorEl = document.querySelector('.editor')
+  let editorRect = editorEl.getBoundingClientRect()
+  let left = e.clientX - editorRect.left
+  let top = e.clientY - editorRect.top
+  let adjustedLeft = left > editorRect.width ? editorRect.width : left
+  let adjustedTop = top > editorRect.height ? editorRect.height : top
+  store.showContextMenu({ top: adjustedTop, left: adjustedLeft })
+}
 
-    getSelectArea() {
-      const result = []
-      // 区域起点坐标
-      const { x, y } = this.start
-      // 计算所有的组件数据，判断是否在选中区域内
-      this.componentData.forEach((component) => {
-        if (component.isLock) return
+function getComponentStyleWrapper(style) {
+  return getStyle(style, svgFilterAttrs)
+}
 
-        const { left, top, width, height } = getComponentRotatedStyle(component.style)
-        if (x <= left && y <= top && left + width <= x + this.width && top + height <= y + this.height) {
-          result.push(component)
-        }
-      })
+function getSVGStyleWrapper(style) {
+  return getSVGStyle(style, svgFilterAttrs)
+}
 
-      // 返回在选中区域内的所有组件
-      return result
-    },
+function handleInput(element, value) {
+  store.setShapeStyle({ height: getTextareaHeight(element, value) })
+}
 
-    handleContextMenu(e) {
-      e.stopPropagation()
-      e.preventDefault()
-
-      // 获取旋转后的实际位置
-      // const targetRect = e.target.getBoundingClientRect();
-      let editor = document.querySelector('.editor')
-
-      let editorRect = editor.getBoundingClientRect()
-
-      // 计算相对编辑器的精确位置（考虑旋转）
-      let left = e.clientX - editorRect.left
-      let top = e.clientY - editorRect.top
-
-      let adjustedLeft = left > editorRect.width ? editorRect.width : left
-      let adjustedTop = top > editorRect.height ? editorRect.height : top
-      this.$store.commit('showContextMenu', { top: adjustedTop, left: adjustedLeft })
-    },
-
-    getComponentStyle(style) {
-      return getStyle(style, this.svgFilterAttrs)
-    },
-
-    getSVGStyle(style) {
-      return getSVGStyle(style, this.svgFilterAttrs)
-    },
-
-    handleInput(element, value) {
-      // 根据文本组件高度调整 shape 高度
-      this.$store.commit('setShapeStyle', { height: this.getTextareaHeight(element, value) })
-    },
-
-    getTextareaHeight(element, text) {
-      let { lineHeight, fontSize, height } = element.style
-      if (lineHeight === '') {
-        lineHeight = 1.5
-      }
-
-      const newHeight = (text.split('<br>').length - 1) * lineHeight * (fontSize || this.canvasStyleData.fontSize)
-      return height > newHeight ? height : newHeight
-    },
-  },
+function getTextareaHeight(element, text) {
+  let { lineHeight, fontSize, height } = element.style
+  if (lineHeight === '') {
+    lineHeight = 1.5
+  }
+  const newHeight = (text.split('<br>').length - 1) * lineHeight * (fontSize || canvasStyleData.value.fontSize)
+  return height > newHeight ? height : newHeight
 }
 </script>
 

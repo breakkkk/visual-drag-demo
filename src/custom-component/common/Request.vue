@@ -3,7 +3,7 @@
     <el-form>
       <el-form-item label="请求地址">
         <el-input v-model.trim="request.url" @blur="validateURL">
-          <template slot="prepend">HTTPS://</template>
+          <template #prepend>HTTPS://</template>
         </el-input>
       </el-form-item>
       <el-form-item label="请求方法">
@@ -47,49 +47,46 @@
   </el-collapse-item>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue'
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 import { urlRE, getURL } from '@/utils/request'
+import { ElMessage } from 'element-plus'
 
-export default {
-  data() {
-    return {
-      methodOptions: ['GET', 'POST', 'PUT', 'DELETE'],
-      dataOptions: ['object', 'array', 'string'],
-    }
-  },
-  computed: {
-    request() {
-      return this.$store.state.curComponent.request
-    },
-  },
-  methods: {
-    addArrayData() {
-      this.request.data.push('')
-    },
+const store = useStore()
+const { curComponent } = storeToRefs(store)
 
-    addData() {
-      this.request.data.push(['', ''])
-    },
+const methodOptions = ['GET', 'POST', 'PUT', 'DELETE']
+const dataOptions = ['object', 'array', 'string']
 
-    deleteData(index) {
-      this.request.data.splice(index, 1)
-    },
+const request = computed(() => curComponent.value.request)
 
-    onChnage() {
-      if (this.request.paramType === 'array') {
-        this.request.data = ['']
-      } else {
-        this.request.data = [['', '']]
-      }
-    },
+function addArrayData() {
+  request.value.data.push('')
+}
 
-    validateURL() {
-      const url = this.request.url
-      if ((url && /^\d+$/.test(url)) || !urlRE.test(getURL(url))) {
-        this.$message.error('请输入正确的 URL')
-      }
-    },
-  },
+function addData() {
+  request.value.data.push(['', ''])
+}
+
+function deleteData(index) {
+  request.value.data.splice(index, 1)
+}
+
+function onChnage() {
+  if (request.value.paramType === 'array') {
+    request.value.data = ['']
+  } else {
+    request.value.data = [['', '']]
+  }
+}
+
+function validateURL() {
+  const url = request.value.url
+  if ((url && /^\d+$/.test(url)) || !urlRE.test(getURL(url))) {
+    ElMessage.error('请输入正确的 URL')
+  }
 }
 </script>
 

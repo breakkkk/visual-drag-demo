@@ -18,52 +18,51 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
+<script setup>
+import { useStore } from '@/store'
+import { storeToRefs } from 'pinia'
 
-export default {
-  computed: mapState(['componentData', 'curComponent', 'curComponentIndex']),
-  methods: {
-    getComponent(index) {
-      return this.componentData[this.componentData.length - 1 - index]
-    },
+const store = useStore()
+const { componentData, curComponentIndex, rightList } = storeToRefs(store)
 
-    transformIndex(index) {
-      return this.componentData.length - 1 - index
-    },
+function getComponent(index) {
+  return componentData.value[componentData.value.length - 1 - index]
+}
 
-    onClick(index) {
-      if (!this.$store.state.rightList) {
-        this.$store.commit('isShowRightList')
-      }
-      this.setCurComponent(index)
-    },
+function transformIndex(index) {
+  return componentData.value.length - 1 - index
+}
 
-    deleteComponent() {
-      setTimeout(() => {
-        this.$store.commit('deleteComponent')
-        this.$store.commit('recordSnapshot')
-      })
-    },
+function onClick(index) {
+  if (!rightList.value) {
+    store.isShowRightList()
+  }
+  setCurComponent(index)
+}
 
-    upComponent() {
-      setTimeout(() => {
-        this.$store.commit('upComponent')
-        this.$store.commit('recordSnapshot')
-      })
-    },
+function deleteComponent() {
+  setTimeout(() => {
+    store.deleteComponent()
+    store.recordSnapshot()
+  })
+}
 
-    downComponent() {
-      setTimeout(() => {
-        this.$store.commit('downComponent')
-        this.$store.commit('recordSnapshot')
-      })
-    },
+function upComponent() {
+  setTimeout(() => {
+    store.upComponent()
+    store.recordSnapshot()
+  })
+}
 
-    setCurComponent(index) {
-      this.$store.commit('setCurComponent', { component: this.componentData[index], index })
-    },
-  },
+function downComponent() {
+  setTimeout(() => {
+    store.downComponent()
+    store.recordSnapshot()
+  })
+}
+
+function setCurComponent(index) {
+  store.setCurComponent({ component: componentData.value[index], index })
 }
 </script>
 

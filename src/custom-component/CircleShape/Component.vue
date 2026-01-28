@@ -1,26 +1,31 @@
 <template>
-  <div class="circle-shape">
+  <div ref="circleRef" class="circle-shape">
     <v-text :prop-value="element.propValue" :element="element" />
   </div>
 </template>
 
-<script>
-import OnEvent from '../common/OnEvent'
+<script setup>
+import { ref } from 'vue'
+import { useOnEvent } from '../common/useOnEvent'
 
-export default {
-  extends: OnEvent,
-  props: {
-    propValue: {
-      type: String,
-      required: true,
-      default: '',
-    },
-    element: {
-      type: Object,
-      default: () => {},
-    },
+const props = defineProps({
+  propValue: {
+    type: String,
+    required: true,
+    default: '',
   },
-}
+  element: {
+    type: Object,
+    default: () => {},
+  },
+  linkage: {
+    type: Object,
+    default: () => {},
+  },
+})
+
+const circleRef = ref(null)
+useOnEvent(props, circleRef)
 </script>
 
 <style lang="scss" scoped>
