@@ -5,12 +5,16 @@ export const contextmenuState = {
 }
 
 export const contextmenuActions = {
-  showContextMenu({ top, left }) {
+  showContextMenu({ top, left }: { top: number; left: number }) {
+    // @ts-ignore
     this.menuShow = true
+    // @ts-ignore
     this.menuTop = top
+    // @ts-ignore
     this.menuLeft = left
   },
   hideContextMenu() {
+    // @ts-ignore
     this.menuShow = false
   },
 }

@@ -3,7 +3,7 @@ import { divide, multiply } from 'mathjs'
 
 // 角度转弧度
 // Math.PI = 180 度
-function angleToRadian(angle) {
+function angleToRadian(angle: number) {
   return (angle * Math.PI) / 180
 }
 
@@ -15,7 +15,7 @@ function angleToRadian(angle) {
  * @return  {Object}         旋转后的坐标
  * https://www.zhihu.com/question/67425734/answer/252724399 旋转矩阵公式
  */
-export function calculateRotatedPointCoordinate(point, center, rotate) {
+export function calculateRotatedPointCoordinate(point: { x: number; y: number }, center: { x: number; y: number }, rotate: number) {
   /**
    * 旋转公式：
    *  点a(x, y)
@@ -45,7 +45,7 @@ export function calculateRotatedPointCoordinate(point, center, rotate) {
  * @param  {String} name   点名称
  * @return {Object}        旋转后的点坐标
  */
-export function getRotatedPointCoordinate(style, center, name) {
+export function getRotatedPointCoordinate(style: Project.ComponentStyle, center: { x: number; y: number }, name: string) {
   let point // point 是未旋转前的坐标
   switch (name) {
     case 't':
@@ -110,30 +110,30 @@ export function getRotatedPointCoordinate(style, center, name) {
 }
 
 // 求两点之间的中点坐标
-export function getCenterPoint(p1, p2) {
+export function getCenterPoint(p1: { x: number; y: number }, p2: { x: number; y: number }) {
   return {
     x: p1.x + (p2.x - p1.x) / 2,
     y: p1.y + (p2.y - p1.y) / 2,
   }
 }
 
-export function sin(rotate) {
+export function sin(rotate: number) {
   return Math.abs(Math.sin(angleToRadian(rotate)))
 }
 
-export function cos(rotate) {
+export function cos(rotate: number) {
   return Math.abs(Math.cos(angleToRadian(rotate)))
 }
 
-export function mod360(deg) {
+export function mod360(deg: number) {
   return (deg + 360) % 360
 }
 
-export function changeStyleWithScale(value) {
+export function changeStyleWithScale(value: number) {
   const store = useStore()
-  return multiply(value, divide(parseInt(store.canvasStyleData.scale), 100))
+  return multiply(value, divide(parseInt(store.canvasStyleData.scale as unknown as string), 100))
 }
 
-export function toPercent(val) {
+export function toPercent(val: number) {
   return `${val * 100}%`
 }

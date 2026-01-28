@@ -4,19 +4,20 @@ import { divide, multiply } from 'mathjs'
 
 const needToChangeAttrs = ['top', 'left', 'width', 'height', 'fontSize', 'padding']
 // 根据比例缩放组件尺寸
-export default function changeComponentsSizeWithScale(scale, snapshotData = null) {
+export default function changeComponentsSizeWithScale(scale: number, snapshotData: any = null) {
   const store = useStore()
   const componentData = snapshotData || deepCopy(store.componentData)
-  componentData.forEach((component) => {
+  componentData.forEach((component: any) => {
     Object.keys(component.style).forEach((key) => {
       if (needToChangeAttrs.includes(key)) {
         let newKey
         if (snapshotData) {
           // 根据比例计算新的属性值
-          newKey = ((component.style[key] / snapshotData[0].lastScale) * scale).toFixed(4) - 0
+          newKey = ((component.style[key] / snapshotData[0].lastScale) * scale).toFixed(4) as any - 0
         } else {
           // 否则根据当前画布的比例计算新的属性值
-          newKey = ((component.style[key] / store.canvasStyleData.scale) * scale).toFixed(4) - 0
+          // @ts-ignore
+          newKey = ((component.style[key] / store.canvasStyleData.scale) * scale).toFixed(4) as any - 0
         }
 
         if (key == 'top' || key == 'left') {
@@ -47,7 +48,7 @@ export default function changeComponentsSizeWithScale(scale, snapshotData = null
 }
 
 const needToChangeAttrs2 = ['width', 'height', 'fontSize', 'padding']
-export function changeComponentSizeWithScale(component) {
+export function changeComponentSizeWithScale(component: any) {
   const store = useStore()
   Object.keys(component.style).forEach((key) => {
     if (needToChangeAttrs2.includes(key)) {
@@ -58,6 +59,6 @@ export function changeComponentSizeWithScale(component) {
   })
 }
 
-function format(value, scale) {
+function format(value: any, scale: any) {
   return multiply(value, divide(parseFloat(scale), 100))
 }

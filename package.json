@@ -21,11 +21,11 @@
     ]
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.1.0",
     "ace-builds": "^1.12.3",
     "core-js": "^3.8.3",
     "echarts": "^5.4.1",
     "element-plus": "^2.3.0",
-    "@element-plus/icons-vue": "^2.1.0",
     "html-to-image": "^1.9.0",
     "mathjs": "^10.5.3",
     "nanoid": "^4.0.0",
@@ -46,6 +46,8 @@
     "lint-staged": "^11.0.0",
     "prettier": "^3.3.3",
     "sass": "^1.32.7",
-    "vite": "^4.1.4"
+    "typescript": "^5.9.3",
+    "vite": "^4.1.4",
+    "vue-tsc": "^3.2.4"
   }
 }

@@ -44,76 +44,95 @@ export const useStore = defineStore('main', {
 
   actions: {
     // index.js mutations (now actions)
-    aceSetCanvasData(value) {
+    aceSetCanvasData(value: Project.CanvasStyleData) {
       this.canvasStyleData = value
     },
-    setLastScale(value) {
+    setLastScale(value: number) {
       this.lastScale = value
     },
-    aceSetcurComponent(value) {
+    aceSetcurComponent(value: Project.ComponentData) {
       for (let i = 0; i < this.componentData.length; i++) {
+        // @ts-ignore
         if (this.componentData[i].id === value.id) {
+          // @ts-ignore
           this.componentData.splice(i, 1)
         }
       }
+      // @ts-ignore
       this.componentData.push(value)
+      // @ts-ignore
       this.curComponent = value
     },
-    setClickComponentStatus(status) {
+    setClickComponentStatus(status: boolean) {
       this.isClickComponent = status
     },
     isShowRightList() {
       this.rightList = !this.rightList
     },
-    toggleDarkMode(status) {
+    toggleDarkMode(status: boolean) {
       this.isDarkMode = status
       this.canvasStyleData.background = status ? '#817f7f' : '#fff'
       localStorage.setItem('isDarkMode', JSON.stringify(this.isDarkMode))
     },
-    setEditMode(mode) {
+    setEditMode(mode: string) {
       this.editMode = mode
     },
-    setInEditorStatus(status) {
+    setInEditorStatus(status: boolean) {
       this.isInEdiotr = status
     },
-    setCanvasStyle(style) {
+    setCanvasStyle(style: Project.CanvasStyleData) {
       this.canvasStyleData = style
     },
-    setCurComponent({ component, index }) {
+    setCurComponent({ component, index }: { component: Project.ComponentData | null; index: number | null }) {
+      // @ts-ignore
       this.curComponent = component
+      // @ts-ignore
       this.curComponentIndex = index
     },
-    setShapeStyle({ top, left, width, height, rotate, padding }) {
+    setShapeStyle({ top, left, width, height, rotate, padding }: Project.ComponentStyle) {
       const curComponent = this.curComponent
+      // @ts-ignore
       if (top !== undefined) curComponent.style.top = Math.round(top)
+      // @ts-ignore
       if (left !== undefined) curComponent.style.left = Math.round(left)
+      // @ts-ignore
       if (width) curComponent.style.width = Math.round(width)
+      // @ts-ignore
       if (padding) curComponent.style.padding = Math.round(padding)
+      // @ts-ignore
       if (height) curComponent.style.height = Math.round(height)
+      // @ts-ignore
       if (rotate) curComponent.style.rotate = Math.round(rotate)
     },
-    setShapeSingleStyle({ key, value }) {
+    setShapeSingleStyle({ key, value }: { key: string; value: any }) {
+      // @ts-ignore
       this.curComponent.style[key] = value
     },
-    setComponentData(componentData = []) {
+    setComponentData(componentData: Project.ComponentData[] = []) {
+      // @ts-ignore
       this.componentData = componentData
     },
-    addComponent({ component, index }) {
+    addComponent({ component, index }: { component: Project.ComponentData; index?: number }) {
       if (index !== undefined) {
+        // @ts-ignore
         this.componentData.splice(index, 0, component)
       } else {
+        // @ts-ignore
         this.componentData.push(component)
       }
     },
-    deleteComponent(index) {
+    deleteComponent(index?: number) {
       if (index === undefined) {
+        // @ts-ignore
         index = this.curComponentIndex
       }
       if (index == this.curComponentIndex) {
         this.curComponentIndex = null
         this.curComponent = null
       }
+      // @ts-ignore
       if (/\d/.test(index)) {
+        // @ts-ignore
         this.componentData.splice(index, 1)
       }
     },

@@ -28,7 +28,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from '@/store'
 import { storeToRefs } from 'pinia'
-import { keycodes } from '@/utils/shortcutKey.js'
+import { keycodes } from '@/utils/shortcutKey'
 import requestFn from '@/utils/request'
 import eventBus from '@/utils/eventBus'
 import { useOnEvent } from '../common/useOnEvent'

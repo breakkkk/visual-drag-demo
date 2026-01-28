@@ -1,10 +1,10 @@
 import { onMounted, onBeforeUnmount } from 'vue'
 import eventBus from '@/utils/eventBus'
 
-export function useOnEvent(props, elementRef) {
-  function changeStyle(data = []) {
+export function useOnEvent(props: any, elementRef: any) {
+  function changeStyle(data: any[] = []) {
     data.forEach((item) => {
-      item.style.forEach((e) => {
+      item.style.forEach((e: any) => {
         if (e.key) {
           props.element.style[e.key] = e.value
         }
@@ -12,15 +12,15 @@ export function useOnEvent(props, elementRef) {
     })
   }
 
-  function onClick(componentId) {
+  function onClick(componentId: string) {
     if (!props.linkage?.data) return
-    const data = props.linkage.data.filter((item) => item.id === componentId && item.event === 'v-click')
+    const data = props.linkage.data.filter((item: any) => item.id === componentId && item.event === 'v-click')
     changeStyle(data)
   }
 
-  function onHover(componentId) {
+  function onHover(componentId: string) {
     if (!props.linkage?.data) return
-    const data = props.linkage.data.filter((item) => item.id === componentId && item.event === 'v-hover')
+    const data = props.linkage.data.filter((item: any) => item.id === componentId && item.event === 'v-hover')
     changeStyle(data)
   }
 

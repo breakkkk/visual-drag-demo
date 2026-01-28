@@ -21,7 +21,7 @@ const ctrlKey = 17,
 export const keycodes = [66, 67, 68, 69, 71, 76, 80, 83, 85, 86, 88, 89, 90]
 
 // 与组件状态无关的操作
-const basemap = {
+const basemap: Record<number, Function> = {
   [vKey]: paste,
   [yKey]: redo,
   [zKey]: undo,
@@ -31,13 +31,13 @@ const basemap = {
 }
 
 // 组件锁定状态下可以执行的操作
-const lockMap = {
+const lockMap: Record<number, Function> = {
   ...basemap,
   [uKey]: unlock,
 }
 
 // 组件未锁定状态下可以执行的操作
-const unlockMap = {
+const unlockMap: Record<number, Function> = {
   ...basemap,
   [cKey]: copy,
   [xKey]: cut,
@@ -92,7 +92,7 @@ function copy() {
 
 function paste() {
   const store = useStore()
-  store.paste()
+  store.paste(false)
   store.recordSnapshot()
 }
 

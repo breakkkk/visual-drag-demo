@@ -1,6 +1,6 @@
-export default async function runAnimation($el, animations = []) {
-  const play = (animation) =>
-    new Promise((resolve) => {
+export default async function runAnimation($el: HTMLElement, animations: any[] = []) {
+  const play = (animation: any) =>
+    new Promise<void>((resolve) => {
       const { animationTime, value = '', isLoop } = animation
       $el.style.setProperty('--time', `${animationTime}s`)
       $el.classList.add(value, 'animated', utilsHandle(isLoop))
@@ -21,6 +21,6 @@ export default async function runAnimation($el, animations = []) {
   }
 }
 
-function utilsHandle(isLoop) {
+function utilsHandle(isLoop: boolean) {
   return isLoop ? 'infinite' : 'no-infinite'
 }

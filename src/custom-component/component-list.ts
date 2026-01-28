@@ -1,11 +1,10 @@
-import titleImg from '@/assets/title.jpg'
 // 公共样式
-export const commonStyle = {
+export const commonStyle: Partial<ComponentStyle> = {
   rotate: 0,
   opacity: 1,
 }
 
-export const commonAttr = {
+export const commonAttr: Partial<ComponentData> = {
   animations: [],
   events: {},
   groupStyle: {}, // 当一个组件成为 Group 的子组件时使用
@@ -25,8 +24,10 @@ export const commonAttr = {
   },
 }
 
+import titleImg from '@/assets/title.jpg'
+
 // 编辑器左侧组件列表
-const list = [
+const list: ComponentData[] = [
   {
     component: 'VText',
     label: '文字',
@@ -51,6 +52,10 @@ const list = [
       textAlign: '',
       color: '',
       padding: 4,
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -58,6 +63,15 @@ const list = [
     label: '按钮',
     propValue: '按钮',
     icon: 'button',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 100,
       height: 34,
@@ -71,6 +85,10 @@ const list = [
       textAlign: '',
       color: '',
       backgroundColor: '',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -84,10 +102,23 @@ const list = [
         vertical: false,
       },
     },
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 300,
       height: 200,
       borderRadius: '',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -95,6 +126,15 @@ const list = [
     label: '矩形',
     propValue: '&nbsp;',
     icon: 'juxing',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 200,
       height: 200,
@@ -110,6 +150,10 @@ const list = [
       borderStyle: 'solid',
       borderRadius: '',
       verticalAlign: 'middle',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -117,10 +161,23 @@ const list = [
     label: '直线',
     propValue: '',
     icon: 'zhixian',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 200,
       height: 2,
       backgroundColor: '#000',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -128,6 +185,15 @@ const list = [
     label: '圆形',
     propValue: '&nbsp;',
     icon: '24gl-circle',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 200,
       height: 200,
@@ -143,6 +209,10 @@ const list = [
       borderStyle: 'solid',
       borderRadius: '',
       verticalAlign: 'middle',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -150,6 +220,15 @@ const list = [
     label: '星形',
     icon: 'kongwujiaoxing',
     propValue: '',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 80,
       height: 80,
@@ -161,6 +240,10 @@ const list = [
       color: '',
       borderColor: '#000',
       backgroundColor: 'rgba(255, 255, 255, 1)',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -168,6 +251,15 @@ const list = [
     label: '三角形',
     icon: 'xingzhuang-sanjiaoxing',
     propValue: '',
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 80,
       height: 80,
@@ -179,6 +271,10 @@ const list = [
       color: '',
       borderColor: '#000',
       backgroundColor: 'rgba(255, 255, 255, 1)',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -210,6 +306,10 @@ const list = [
       textAlign: 'center',
       color: '',
       backgroundColor: 'rgba(255, 255, 255, 1)',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
   {
@@ -250,18 +350,31 @@ const list = [
         },
       },
     },
+    request: {
+      method: 'GET',
+      data: [],
+      url: '',
+      series: false,
+      time: 1000,
+      paramType: '',
+      requestCount: 0,
+    },
     style: {
       width: 800,
       height: 500,
       borderRadius: '',
+      top: 0,
+      left: 0,
+      rotate: 0,
+      opacity: 1,
     },
   },
 ]
 
 for (let i = 0, len = list.length; i < len; i++) {
   const item = list[i]
-  item.style = { ...commonStyle, ...item.style }
-  list[i] = { ...commonAttr, ...item }
+  item.style = { ...commonStyle, ...item.style } as ComponentStyle
+  list[i] = { ...commonAttr, ...item } as ComponentData
 }
 
 export default list

@@ -91,7 +91,7 @@ const animationClassData = [
 ]
 
 animationClassData.forEach((item) => {
-  item.children.forEach((e) => {
+  item.children.forEach((e: any) => {
     // 是否在运行动画
     e.pending = false
 
