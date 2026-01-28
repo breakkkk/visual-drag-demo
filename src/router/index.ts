@@ -4,7 +4,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue'),
+    component: () => import('@/views/FormRender.vue'),
+  },
+  {
+    path: '/preview',
+    name: 'Preview',
+    component: () => import('@/views/PreviewRoute.vue'),
   },
 ]
 

@@ -117,9 +117,12 @@ import changeComponentsSizeWithScale, { changeComponentSizeWithScale } from '@/u
 import { getComponentRotatedStyle } from '@/utils/style'
 import { ElMessage } from 'element-plus'
 import { Sunny, Moon, ArrowDown } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const store = useStore()
 const { componentData, canvasStyleData, areaData, curComponent, curComponentIndex, isDarkMode } = storeToRefs(store)
+const emit = defineEmits(['save'])
 
 const isShowPreview = ref(false)
 const isShowAceEditor = ref(false)
@@ -279,14 +282,20 @@ function handleFileChange(e) {
 }
 
 function preview(isScreenshotVal) {
-  isScreenshot.value = isScreenshotVal
-  isShowPreview.value = true
-  store.setEditMode('preview')
+  // isScreenshot.value = isScreenshotVal
+  // isShowPreview.value = true
+  // store.setEditMode('preview')
+  router.push({ path: '/preview' })
 }
 
 function save() {
   localStorage.setItem('canvasData', JSON.stringify(componentData.value))
   localStorage.setItem('canvasStyle', JSON.stringify(canvasStyleData.value))
+
+  emit('save', {
+    componentData: componentData.value,
+    canvasStyleData: canvasStyleData.value,
+  })
   ElMessage.success('保存成功')
 }
 

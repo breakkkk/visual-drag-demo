@@ -1,6 +1,6 @@
 <template>
   <div :class="!isDarkMode ? 'home' : 'home dark'">
-    <Toolbar />
+    <Toolbar @save="handleSave" />
 
     <main>
       <!-- 左侧组件列表 -->
@@ -11,7 +11,7 @@
       <el-button
         title="show-list-btn"
         class="btn show-list left-btn"
-        :icon="leftList ? 'ArrowLeft' : 'ArrowRight'"
+        :icon="leftList ? ArrowLeft : ArrowRight"
         @click="isShowLeft"
       >
       </el-button>
@@ -45,7 +45,7 @@
       <el-button
         title="show-list-btn"
         class="btn show-list right-btn"
-        :icon="rightList ? 'ArrowRight' : 'ArrowLeft'"
+        :icon="rightList ? ArrowRight : ArrowLeft"
         @click="isShowRight"
       >
       </el-button>
@@ -76,6 +76,7 @@ const { editMode, curComponent, rightList, isDarkMode } = storeToRefs(store)
 const activeName = ref('attr')
 const reSelectAnimateIndex = ref(undefined)
 const leftList = ref(true)
+const emit = defineEmits(['save'])
 
 onMounted(() => {
   restore()
@@ -150,6 +151,10 @@ function isShowLeft() {
 
 function isShowRight() {
   store.isShowRightList()
+}
+
+const handleSave = (data) => {
+  emit('save', data)
 }
 </script>
 
