@@ -1,5 +1,5 @@
 <template>
-  <div class="canvas-container">
+  <div class="canvas-container h5-editor-wrapper">
     <div
       class="canvas"
       :style="{

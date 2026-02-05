@@ -12,7 +12,9 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "@/styles/variable.scss";`,
+        api: 'modern-compiler',
+        silenceDeprecations: ['legacy-js-api'],
+        additionalData: `@use "@/styles/variable.scss" as *;`,
       },
     },
   },
@@ -29,12 +31,15 @@ export default defineConfig({
         warn(warning)
       },
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ['vue', 
-        // 'element-plus', 
-        'echarts', 'vue-router', 'pinia', 
+      external: [
+        'vue',
+        // 'element-plus',
+        'echarts',
+        'vue-router',
+        'pinia',
         // 'vue-echarts',
         //  '@element-plus/icons-vue'
-        ],
+      ],
       output: {
         inlineDynamicImports: true,
         exports: 'named',

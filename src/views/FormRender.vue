@@ -1,5 +1,5 @@
 <template>
-  <div :class="!isDarkMode ? 'home' : 'home dark'">
+  <div :class="!isDarkMode ? 'h5-editor-wrapper' : 'h5-editor-wrapper dark'">
     <Toolbar />
 
     <main>
@@ -181,7 +181,7 @@ defineExpose({
 </script>
 
 <style lang="scss">
-.home {
+.h5-editor-wrapper {
   height: 100vh;
   background: var(--main-bg-color);
 
