@@ -53,6 +53,17 @@ npm run dev
 
 ```
 npm run build
+<!-- 打包成库 -->
+npm run build:lib
+在项目中加入
+declare module '@/../lib/h5-editor/h5-editor.umd.js'
+在vite.config.ts中加入
+optimizeDeps:{
+  include: [
+    ...,
+    '文件目录/h5-editor/h5-editor.umd.js''
+  ]
+}
 ```
 
 ## License

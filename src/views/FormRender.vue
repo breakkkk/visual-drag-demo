@@ -1,6 +1,6 @@
 <template>
   <div :class="!isDarkMode ? 'home' : 'home dark'">
-    <Toolbar @save="handleSave" />
+    <Toolbar />
 
     <main>
       <!-- 左侧组件列表 -->
@@ -53,7 +53,7 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { useStore, setDefaultcomponentData } from '@/store'
 import { storeToRefs } from 'pinia'
@@ -153,9 +153,31 @@ function isShowRight() {
   store.isShowRightList()
 }
 
-const handleSave = (data) => {
-  emit('save', data)
+// 获取配置数据
+const getFormJson = (): {
+  canvasStyleData: Project.CanvasStyleData
+  componentData: Project.ComponentData[]
+} => {
+  return {
+    canvasStyleData: store.canvasStyleData,
+    componentData: store.componentData,
+  }
 }
+
+// 设置配置数据
+const setFormJson = (formJson: {
+  canvasStyleData: Project.CanvasStyleData
+  componentData: Project.ComponentData[]
+}) => {
+  const { canvasStyleData, componentData } = formJson
+  store.setComponentData(componentData)
+  store.setCanvasStyle(canvasStyleData)
+}
+
+defineExpose({
+  getFormJson,
+  setFormJson,
+})
 </script>
 
 <style lang="scss">

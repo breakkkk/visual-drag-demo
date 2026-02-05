@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { createPinia, defineStore } from 'pinia'
 import { alignActions } from './align'
 import { animationActions } from './animation'
 import { composeState, composeActions } from './compose'
@@ -10,10 +10,11 @@ import { lockActions } from './lock'
 import { snapshotState, snapshotActions } from './snapshot'
 import { setDefaultcomponentData } from './defaults'
 
+const store = createPinia()
 // Export setDefaultcomponentData for compatibility
 export { setDefaultcomponentData }
 
-export const useStore = defineStore('main', {
+const _useStore = defineStore('main', {
   state: () => ({
     // index.js state
     lastScale: 100,
@@ -149,3 +150,5 @@ export const useStore = defineStore('main', {
     ...snapshotActions,
   },
 })
+
+export const useStore = () => _useStore(store)

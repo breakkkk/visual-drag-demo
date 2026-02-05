@@ -12,7 +12,7 @@
       </label>
 
       <el-button style="margin-left: 10px" @click="preview(false)"> 预览 </el-button>
-      <el-button @click="save">保存</el-button>
+      <!-- <el-button @click="save">保存</el-button> -->
       <el-button @click="clearCanvas">清空画布</el-button>
       <el-button :disabled="!areaData.components.length" @click="compose"> 组合 </el-button>
       <el-button
@@ -292,10 +292,6 @@ function save() {
   localStorage.setItem('canvasData', JSON.stringify(componentData.value))
   localStorage.setItem('canvasStyle', JSON.stringify(canvasStyleData.value))
 
-  emit('save', {
-    componentData: componentData.value,
-    canvasStyleData: canvasStyleData.value,
-  })
   ElMessage.success('保存成功')
 }
 
