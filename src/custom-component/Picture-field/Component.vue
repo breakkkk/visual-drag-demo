@@ -22,6 +22,10 @@ const props = defineProps({
     type: Object,
     default: () => {},
   },
+  request: {
+    type: Object,
+    default: () => {},
+  },
 })
 
 const canvasRef = ref(null)

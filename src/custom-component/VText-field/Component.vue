@@ -67,6 +67,7 @@ const textRef = ref(null)
 useOnEvent(props, textRef)
 
 onMounted(() => {
+  console.log('props', props)
   if (props.request) {
     cancelRequest = requestFn(props.request, props.element, 'propValue', 'string')
   }

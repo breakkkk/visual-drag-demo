@@ -282,10 +282,10 @@ function handleFileChange(e) {
 }
 
 function preview(isScreenshotVal) {
-  // isScreenshot.value = isScreenshotVal
-  // isShowPreview.value = true
-  // store.setEditMode('preview')
-  router.push({ path: '/preview' })
+  isScreenshot.value = isScreenshotVal
+  isShowPreview.value = true
+  store.setEditMode('preview')
+  // router.push({ path: '/preview' })
 }
 
 function save() {
