@@ -27,18 +27,7 @@
     >
       <component
         :is="item.component"
-        v-if="item.component.startsWith('SVG')"
-        :id="'component' + item.id"
-        :style="getSVGStyleWrapper(item.style)"
-        class="component"
-        :prop-value="item.propValue"
-        :element="item"
-        :request="item.request"
-      />
-
-      <component
-        :is="item.component"
-        v-else-if="item.component != 'VText'"
+        v-if="item.component != 'VText'"
         :id="'component' + item.id"
         class="component"
         :style="getComponentStyleWrapper(item.style)"

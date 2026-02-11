@@ -51,7 +51,12 @@ const list: ComponentData[] = [
       letterSpacing: 0,
       textAlign: '',
       color: '',
-      padding: 4,
+      padding: {
+        top: 4,
+        right: 4,
+        bottom: 4,
+        left: 4,
+      },
       top: 0,
       left: 0,
       rotate: 0,

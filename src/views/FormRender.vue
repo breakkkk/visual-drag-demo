@@ -33,12 +33,12 @@
           <el-tab-pane label="属性" name="attr">
             <component :is="curComponent.component + 'Attr'" />
           </el-tab-pane>
-          <el-tab-pane label="动画" name="animation" style="padding-top: 20px">
+          <!-- <el-tab-pane label="动画" name="animation" style="padding-top: 20px">
             <AnimationList />
           </el-tab-pane>
           <el-tab-pane label="事件" name="events" style="padding-top: 20px">
             <EventList />
-          </el-tab-pane>
+          </el-tab-pane> -->
         </el-tabs>
         <CanvasAttr v-else></CanvasAttr>
       </section>
@@ -110,7 +110,7 @@ function handleDrop(e) {
   const rectInfo = store.editor.getBoundingClientRect()
   if (index) {
     const component = deepCopy(componentList[index])
-    console.log(componentList, index)
+    console.log(componentList, index, component, '======component')
     component.style.top = e.clientY - rectInfo.y
     component.style.left = e.clientX - rectInfo.x
     component.id = generateID()
@@ -119,7 +119,7 @@ function handleDrop(e) {
     changeComponentSizeWithScale(component)
 
     store.addComponent({ component })
-    store.recordSnapshot()
+    // store.recordSnapshot()
   }
 }
 

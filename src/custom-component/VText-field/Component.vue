@@ -170,7 +170,6 @@ function selectText(element) {
     height: 100%;
     outline: none;
     word-break: break-all;
-    padding: 4px;
   }
 
   .can-edit {

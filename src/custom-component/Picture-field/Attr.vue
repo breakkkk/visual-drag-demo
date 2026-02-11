@@ -8,6 +8,9 @@
           <el-checkbox v-model="curComponent.propValue.flip.vertical" label="vertical">垂直翻转</el-checkbox>
         </div>
       </el-form-item>
+      <el-form-item label="图片URL">
+        <el-input v-model="curComponent.propValue.url" placeholder="请输入图片URL" />
+      </el-form-item>
     </el-form>
   </div>
 </template>

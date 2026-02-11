@@ -54,7 +54,13 @@ export function getStyle(style: Project.ComponentStyle, filter: string[] = []) {
   const result: any = {}
   Object.keys(style).forEach((key) => {
     if (!filter.includes(key)) {
-      if (key != 'rotate') {
+      if (key == 'rotate') {
+        result.transform = `${key}(${style[key]}deg)`
+      } else if (key == 'padding') {
+        if (style[key]) {
+          result.padding = `${style[key].top}px ${style[key].right}px ${style[key].bottom}px ${style[key].left}px`
+        }
+      } else {
         if (style[key] !== '') {
           result[key] = style[key]
 
@@ -62,8 +68,6 @@ export function getStyle(style: Project.ComponentStyle, filter: string[] = []) {
             result[key] += 'px'
           }
         }
-      } else {
-        result.transform = `${key}(${style[key]}deg)`
       }
     }
   })

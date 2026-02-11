@@ -1,9 +1,9 @@
 <template>
   <div>
     <div :class="isDarkMode ? 'dark toolbar' : 'toolbar'">
-      <el-button @click="onAceEditorChange">JSON</el-button>
-      <el-button @click="onImportJSON">导入</el-button>
-      <el-button @click="onExportJSON">导出</el-button>
+      <!-- <el-button @click="onAceEditorChange">JSON</el-button> -->
+      <!-- <el-button @click="onImportJSON">导入</el-button> -->
+      <!-- <el-button @click="onExportJSON">导出</el-button> -->
       <el-button @click="undo">撤消</el-button>
       <el-button @click="redo">重做</el-button>
       <label for="input" class="insert">

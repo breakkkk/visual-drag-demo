@@ -28,7 +28,12 @@ declare global {
       borderColor?: string
       borderStyle?: string
       borderRadius?: number | string
-      padding?: number
+      padding?: {
+        left: number
+        right: number
+        top: number
+        bottom: number
+      }
       verticalAlign?: string
       [key: string]: any
     }

@@ -17,6 +17,7 @@ export const styleData = [
   { key: 'textAlign', label: '左右对齐' },
   { key: 'verticalAlign', label: '上下对齐' },
   { key: 'opacity', label: '不透明度' },
+  { key: 'padding', label: '内边距', component: 'padding' },
 ]
 
 export const styleMap = {

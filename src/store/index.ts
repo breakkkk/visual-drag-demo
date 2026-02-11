@@ -91,7 +91,8 @@ const _useStore = defineStore('main', {
       this.curComponentIndex = index
     },
     setShapeStyle({ top, left, width, height, rotate, padding }: Project.ComponentStyle) {
-      const curComponent = this.curComponent
+      const curComponent = this.curComponent as any
+      if (!curComponent) return
       // @ts-ignore
       if (top !== undefined) curComponent.style.top = Math.round(top)
       // @ts-ignore
@@ -99,7 +100,13 @@ const _useStore = defineStore('main', {
       // @ts-ignore
       if (width) curComponent.style.width = Math.round(width)
       // @ts-ignore
-      if (padding) curComponent.style.padding = Math.round(padding)
+      if (padding)
+        curComponent.style.padding = {
+          left: Math.round(padding.left),
+          right: Math.round(padding.right),
+          top: Math.round(padding.top),
+          bottom: Math.round(padding.bottom),
+        }
       // @ts-ignore
       if (height) curComponent.style.height = Math.round(height)
       // @ts-ignore
@@ -121,6 +128,7 @@ const _useStore = defineStore('main', {
         // @ts-ignore
         this.componentData.push(component)
       }
+      console.log(this.componentData, '======componentData')
     },
     deleteComponent(index?: number) {
       if (index === undefined) {
